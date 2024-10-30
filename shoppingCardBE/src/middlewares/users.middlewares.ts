@@ -1,6 +1,7 @@
 // import các interface build-in(tạo sẵn) của express để mô tả
 import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
+import { validate } from '~/utils/validation'
 
 //_middleware thực chất cũng chỉ là function
 //  trong này liên quan đến các file lọc dữ liệu liên quan đến users
@@ -43,135 +44,138 @@ export const loginValidator = (req: Request, res: Response, next: NextFunction) 
 //_Bây giờ mình sẽ sử dụng công nghệ express-validator để làm lưới lọc middleware chắn
 //các dữ liệu không valid
 //_Tuy nhiên mình sẽ sử dụng checkSchema RunnableValidationChain(New) thay cho cách viết ValidationChain(old)
-export const registerValidator = checkSchema({
-  //_Kiểm tra name
-  name: {
-    //_Không được bỏ trống
-    notEmpty: {
-      errorMessage: 'Name is required'
-    },
-    //_Phải là string
-    isString: {
-      errorMessage: 'Name must be string'
-    },
-    //_Bỏ những khoảng thừa
-    trim: true,
-    //_Giới hạn độ dài
-    isLength: {
-      options: {
-        min: 1,
-        max: 100
+export const registerValidator = validate(
+  checkSchema({
+    //_Kiểm tra name
+    name: {
+      //_Không được bỏ trống
+      notEmpty: {
+        errorMessage: 'Name is required'
       },
-      //_Nếu không theo yêu cầu thì chửi
-      errorMessage: "Name's length must be between 1 and 100"
-    }
-  },
-  //_Kiểm tra email
-  email: {
-    notEmpty: {
-      errorMessage: 'Email is required'
-    },
-    isString: {
-      errorMessage: 'Email must be string'
-    },
-    trim: true,
-    //_ràng buộc kt email để nó tự chửi sẽ hay hơn
-    isEmail: true
-  },
-  //_Kiểm tra password:
-  password: {
-    notEmpty: {
-      errorMessage: 'Password is required'
-    },
-    isString: {
-      errorMessage: 'Password must be string'
-    },
-    //_Do dai rang buoc
-    isLength: {
-      options: {
-        min: 8,
-        max: 50
+      //_Phải là string
+      isString: {
+        errorMessage: 'Name must be string'
       },
-      //_Neu khong theo thi chui
-      errorMessage: "Password's length must between 8 and 50"
+      //_Bỏ những khoảng thừa
+      trim: true,
+      //_Giới hạn độ dài
+      isLength: {
+        options: {
+          min: 1,
+          max: 100
+        },
+        //_Nếu không theo yêu cầu thì chửi
+        errorMessage: "Name's length must be between 1 and 100"
+      }
     },
-    //_Kiem tra strong password, nó còn có thể cho biết và đánh giá password như thế nào là mạnh
-    isStrongPassword: {
-      options: {
-        minLowercase: 1,
-        minUppercase: 1,
-        minSymbols: 1,
-        minNumbers: 1,
-        minLength: 8
-        // returnScore
+    //_Kiểm tra email
+    email: {
+      notEmpty: {
+        errorMessage: 'Email is required'
       },
-      //_Neu khong dat thi chui
-      errorMessage:
-        'Password must be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
-    }
-  },
-  //_xac nhan lai password
-  confirm_password: {
-    notEmpty: {
-      errorMessage: 'confirm_password is required'
-    },
-    isString: {
-      errorMessage: 'confirm_password must be string'
-    },
-    //_Do dai rang buoc
-    isLength: {
-      options: {
-        min: 8,
-        max: 50
+      isString: {
+        errorMessage: 'Email must be string'
       },
-      //_Neu khong theo thi chui
-      errorMessage: "confirm_password's length must between 8 and 50"
+      trim: true,
+      //_ràng buộc kt email để nó tự chửi sẽ hay hơn
+      isEmail: true
     },
-    //_Kiem tra strong confirm_password, nó còn có thể cho biết và đánh giá confirm_password như thế nào là mạnh
-    isStrongPassword: {
-      options: {
-        minLowercase: 1,
-        minUppercase: 1,
-        minSymbols: 1,
-        minNumbers: 1,
-        minLength: 8
-        // returnScore
+    //_Kiểm tra password:
+    password: {
+      notEmpty: {
+        errorMessage: 'Password is required'
       },
-      //_Neu khong dat thi chui
-      errorMessage:
-        'confirm_password must be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+      isString: {
+        errorMessage: 'Password must be string'
+      },
+      //_Do dai rang buoc
+      isLength: {
+        options: {
+          min: 8,
+          max: 50
+        },
+        //_Neu khong theo thi chui
+        errorMessage: "Password's length must between 8 and 50"
+      },
+      //_Kiem tra strong password, nó còn có thể cho biết và đánh giá password như thế nào là mạnh
+      isStrongPassword: {
+        options: {
+          minLowercase: 1,
+          minUppercase: 1,
+          minSymbols: 1,
+          minNumbers: 1,
+          minLength: 8
+          // returnScore
+        },
+        //_Neu khong dat thi chui
+        errorMessage:
+          'Password must be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+      }
     },
-    //_Đối với confirm_password thì mình cần kiểm tra thêm có giống password hay chưa
-    //nhưng mình không có hàm đó thì mình phải tự viết bằng cách sử dụng custom
-    //_Sử dụng express-validator sẽ giúp mình giảm thiểu việc phải sử dụng if-else. Tuy nhiên đối với những hàm
-    //quá cá nhân thì cũng phải sử dụng if-else
-    custom: {
-      //_Đây sẽ là hàm kiểm tra xem password và confirm_password có giống nhau hay là không
-      //value: confirm_password và password nằm trong body và nằm trong req, nhưng mình truyền {req} để khi . nó sẽ  hiểu là object và dễ dàng dùng
-      options: (value, { req }) => {
-        //***Kiểm tra nếu mà chúng không giống nhau thì sẽ sẽ tạo ra lỗi và sẽ ném ra
-        //sau đó lỗi sẽ đc lưu trong cuốn nhật kí của checkSchema
-        if (value !== req.body.password) {
-          throw new Error(`Confirm_password doesn't match password`)
-        } else {
-          return true
-          //nếu mà giống nhau thì sẽ trả ra true, nghĩa là k báo lỗi gì hết
+    //_xac nhan lai password
+    confirm_password: {
+      notEmpty: {
+        errorMessage: 'confirm_password is required'
+      },
+      isString: {
+        errorMessage: 'confirm_password must be string'
+      },
+      //_Do dai rang buoc
+      isLength: {
+        options: {
+          min: 8,
+          max: 50
+        },
+        //_Neu khong theo thi chui
+        errorMessage: "confirm_password's length must between 8 and 50"
+      },
+      //_Kiem tra strong confirm_password, nó còn có thể cho biết và đánh giá confirm_password như thế nào là mạnh
+      isStrongPassword: {
+        options: {
+          minLowercase: 1,
+          minUppercase: 1,
+          minSymbols: 1,
+          minNumbers: 1,
+          minLength: 8
+          // returnScore
+        },
+        //_Neu khong dat thi chui
+        errorMessage:
+          'confirm_password must be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+      },
+      //_Đối với confirm_password thì mình cần kiểm tra thêm có giống password hay chưa
+      //nhưng mình không có hàm đó thì mình phải tự viết bằng cách sử dụng custom
+      //_Sử dụng express-validator sẽ giúp mình giảm thiểu việc phải sử dụng if-else. Tuy nhiên đối với những hàm
+      //quá cá nhân thì cũng phải sử dụng if-else
+      custom: {
+        //_Đây sẽ là hàm kiểm tra xem password và confirm_password có giống nhau hay là không
+        //value: confirm_password và password nằm trong body và nằm trong req, nhưng mình truyền {req} để khi . nó sẽ  hiểu là object và dễ dàng dùng
+        options: (value, { req }) => {
+          //***Kiểm tra nếu mà chúng không giống nhau thì sẽ sẽ tạo ra lỗi và sẽ ném ra
+          //sau đó lỗi sẽ đc lưu trong cuốn nhật kí của checkSchema
+          if (value !== req.body.password) {
+            //_Lỗi khi ném ra sẽ được lưu vào note của validationChain
+            throw new Error(`Confirm_password doesn't match password`)
+          } else {
+            return true
+            //nếu mà giống nhau thì sẽ trả ra true, nghĩa là k báo lỗi gì hết
+          }
+        }
+      }
+    },
+    date_of_birth: {
+      //_Đối với ngày thì phải kiểm tra xem chuẩn string dạng ISO8601 hay không
+      //**Không cần check có bỏ trống hay không. Vì nếu bỏ trống thì schema mình sẽ tự động
+      //lấy ngày hiện tại luôn
+      isISO8601: {
+        options: {
+          strict: true,
+          strictSeparator: true
         }
       }
     }
-  },
-  date_of_birth: {
-    //_Đối với ngày thì phải kiểm tra xem chuẩn string dạng ISO8601 hay không
-    //**Không cần check có bỏ trống hay không. Vì nếu bỏ trống thì schema mình sẽ tự động
-    //lấy ngày hiện tại luôn
-    isISO8601: {
-      options: {
-        strict: true,
-        strictSeparator: true
-      }
-    }
-  }
-})
+  })
+)
 
 //_Mặc định những cái điều kiện này nó sẽ tự chửi
 //tuy nhiên nếu mình muốn theo ý mình thì custom theo errorMessage

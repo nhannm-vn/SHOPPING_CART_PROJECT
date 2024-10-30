@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
-
-import User from '~/models/schemas/User.schema'
+import { RegisterReqBody } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
+import { ParamsDictionary } from 'express-serve-static-core'
 
 //_Nghĩa là trong table users có rất nhiều controller
 
@@ -36,19 +36,33 @@ export const loginController = (req: Request, res: Response) => {
 
 //_làm controller cho register, và sẽ nhờ chiếc xe service đem dữ liệu từ controller đi qua database lưu và đem ngược về
 //sau đó bào cho người dùng
-export const registerController = async (req: Request, res: Response) => {
-  //_Dữ liệu đi tới đây thì mình biết nó nằm ở trong đâu luôn
-  const { email, password } = req.body
+export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
+  //LƯU Ý: thí dụ quên đi thì lúc req.body bên trong k có gì hết
+  //vì bản chất con body nó được định nghĩa là any
+  //==> có nhu đầu định nghĩa để biết bên trong nó có gì
+  //chứ nếu mà k định nghĩa thì mình sẽ không biết chắc được bên trong có gì và . không có gì
+  const { email } = req.body
   //nhờ chiếc xe services truy cập tới và thêm dữ liệu vào database dùm mình
   //_Đã đụng tới database thì sẽ có trường hợp rớt mạng nên cần try-catch
   try {
-    //_tao moi mot user roi them vao
-    //_cái phểu của user phải nhận vào một object được định nghĩa UserType một cách chuẩn chỉ
-    //__Mình mà xài databaseServices luôn thì gà quá, phải tách nhỏ hơn nữa rồi mới nhờ thằng database thì mới chuẩn chỉ
-    const result = await userServices.register({
-      email,
-      password
-    })
+    //_Kiểm tra nếu mà email đã trùng trên server rồi thì báo lỗi,
+    //nếu chưa có thì đi xuống dưới tiếp
+    const isDup = await userServices.checkEmailExist(email)
+    if (isDup) {
+      //_Nếu có lỗi thì throw xuống dưới để tập kết tại catch, mình có thể bắn ra nhưng sẽ dở vì đang nằm trong try-catch nên cho xuống catch luôn
+      const customError = new Error('Email has been used')
+      //throw là sẽ k xuống dưới nữa vì đang nằm trong try
+
+      //_Lưu ý: khi em new error thì ở trong nó sẽ có thuộc tính đb là message
+      //mà trong message bộ cờ có 1 thuộc tính mà để người khác nhìn thấy chính là enumerable
+      //=> để hiển thị phải mode lại
+      Object.defineProperty(customError, 'message', {
+        enumerable: true
+      })
+      throw customError
+    }
+
+    const result = await userServices.register(req.body)
     //_sau khi thêm thành công thì báo tín hiệu, đồng thời trả result ra cho người dùng
     //_tạo thành công là 201
     res.status(201).json({
