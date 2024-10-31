@@ -68,6 +68,7 @@ export const registerController = async (
   //_tạo thành công là 201
   res.status(HTTP_STATUS.CREATED).json({
     message: 'Register success',
+    //_khi mà tạo account thành công thì nó sẽ đưa cho mình 2 cái mã nằm bên trong result
     data: result
   })
 }

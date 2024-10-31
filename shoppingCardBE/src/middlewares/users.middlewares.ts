@@ -53,11 +53,11 @@ export const registerValidator = validate(
     name: {
       //_Không được bỏ trống
       notEmpty: {
-        errorMessage: 'Name is required'
+        errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
       },
       //_Phải là string
       isString: {
-        errorMessage: 'Name must be string'
+        errorMessage: USERS_MESSAGES.NAME_MUST_BE_A_STRING
       },
       //_Bỏ những khoảng thừa
       trim: true,
@@ -68,28 +68,30 @@ export const registerValidator = validate(
           max: 100
         },
         //_Nếu không theo yêu cầu thì chửi
-        errorMessage: "Name's length must be between 1 and 100"
+        errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
       }
     },
     //_Kiểm tra email
     email: {
       notEmpty: {
-        errorMessage: 'Email is required'
+        errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
       },
       isString: {
-        errorMessage: 'Email must be string'
+        errorMessage: USERS_MESSAGES.EMAIL_MUST_BE_A_STRING
       },
       trim: true,
       //_ràng buộc kt email để nó tự chửi sẽ hay hơn
-      isEmail: true
+      isEmail: {
+        errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+      }
     },
     //_Kiểm tra password:
     password: {
       notEmpty: {
-        errorMessage: 'Password is required'
+        errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
       },
       isString: {
-        errorMessage: 'Password must be string'
+        errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_A_STRING
       },
       //_Do dai rang buoc
       isLength: {
@@ -98,7 +100,7 @@ export const registerValidator = validate(
           max: 50
         },
         //_Neu khong theo thi chui
-        errorMessage: "Password's length must between 8 and 50"
+        errorMessage: USERS_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
       },
       //_Kiem tra strong password, nó còn có thể cho biết và đánh giá password như thế nào là mạnh
       isStrongPassword: {
@@ -111,17 +113,16 @@ export const registerValidator = validate(
           // returnScore
         },
         //_Neu khong dat thi chui
-        errorMessage:
-          'Password must be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+        errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRONG
       }
     },
     //_xac nhan lai password
     confirm_password: {
       notEmpty: {
-        errorMessage: 'confirm_password is required'
+        errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED
       },
       isString: {
-        errorMessage: 'confirm_password must be string'
+        errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING
       },
       //_Do dai rang buoc
       isLength: {
@@ -130,7 +131,7 @@ export const registerValidator = validate(
           max: 50
         },
         //_Neu khong theo thi chui
-        errorMessage: "confirm_password's length must between 8 and 50"
+        errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
       },
       //_Kiem tra strong confirm_password, nó còn có thể cho biết và đánh giá confirm_password như thế nào là mạnh
       isStrongPassword: {
@@ -143,8 +144,7 @@ export const registerValidator = validate(
           // returnScore
         },
         //_Neu khong dat thi chui
-        errorMessage:
-          'confirm_password must be at least 8 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+        errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRONG
       },
       //_Đối với confirm_password thì mình cần kiểm tra thêm có giống password hay chưa
       //nhưng mình không có hàm đó thì mình phải tự viết bằng cách sử dụng custom
@@ -176,7 +176,8 @@ export const registerValidator = validate(
         options: {
           strict: true,
           strictSeparator: true
-        }
+        },
+        errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_BE_ISO8601
       }
     }
   })
