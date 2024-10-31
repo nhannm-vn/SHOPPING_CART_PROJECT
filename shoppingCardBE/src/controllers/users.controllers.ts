@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import { RegisterReqBody } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
@@ -36,7 +36,11 @@ export const loginController = (req: Request, res: Response) => {
 
 //_làm controller cho register, và sẽ nhờ chiếc xe service đem dữ liệu từ controller đi qua database lưu và đem ngược về
 //sau đó bào cho người dùng
-export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
+export const registerController = async (
+  req: Request<ParamsDictionary, any, RegisterReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
   //LƯU Ý: thí dụ quên đi thì lúc req.body bên trong k có gì hết
   //vì bản chất con body nó được định nghĩa là any
   //==> có nhu đầu định nghĩa để biết bên trong nó có gì
@@ -70,10 +74,8 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
       data: result
     })
   } catch (error) {
-    //nếu rớt mạng thì trả ra lỗi
-    res.status(422).json({
-      message: 'Register failed',
-      error: error
-    })
+    //_Nếu rớt mạng hoặc có lỗi phái trên thì sẽ tập kết về đây. Tuy nhiên mình đã có tầng errorHandler
+    //nó sẽ là nơi tập kết và bắn tất cả lỗi ra ngoài nên mình sẽ next thay vì res nữa
+    next(error)
   }
 }

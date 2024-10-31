@@ -3,6 +3,7 @@
 import express from 'express'
 import userRouter from './routes/users.routers'
 import databaseServices from './services/database.services'
+import { defaultErrorHanlder } from './middlewares/errors.middlewares'
 
 //_Tạo con PORT dành cho backend
 const PORT = 3000
@@ -19,6 +20,9 @@ app.use(express.json())
 
 //_Sử dụng userRouter
 app.use('/users', userRouter)
+
+//_hàm này sẽ chạy cuối cùng và sẽ giúp bắt tất cả các lỗi
+app.use(defaultErrorHanlder)
 
 //_Lắng nghe PORT mở và cho server chạy trên PORT 3000, listen xem có ai đứng ở đó chưa. Nếu chưa có thì mở
 app.listen(PORT, () => {
