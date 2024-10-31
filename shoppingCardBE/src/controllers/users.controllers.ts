@@ -3,6 +3,8 @@ import { RegisterReqBody } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { ErrorWithStatus } from '~/models/Errors'
+import { USERS_MESSAGES } from '~/constants/messages'
 
 //_Nghĩa là trong table users có rất nhiều controller
 
@@ -54,17 +56,11 @@ export const registerController = async (
   //nếu chưa có thì đi xuống dưới tiếp
   const isDup = await userServices.checkEmailExist(email)
   if (isDup) {
-    //_Nếu có lỗi thì throw xuống dưới để tập kết tại catch, mình có thể bắn ra nhưng sẽ dở vì đang nằm trong try-catch nên cho xuống catch luôn
-    const customError = new Error('Email has been used')
-    //throw là sẽ k xuống dưới nữa vì đang nằm trong try
-
-    //_Lưu ý: khi em new error thì ở trong nó sẽ có thuộc tính đb là message
-    //mà trong message bộ cờ có 1 thuộc tính mà để người khác nhìn thấy chính là enumerable
-    //=> để hiển thị phải mode lại
-    Object.defineProperty(customError, 'message', {
-      enumerable: true
+    //Bây giờ khi có lỗi thì mình sẽ đúc ra theo ErrorWithStatus vì thật ra nó cũng chỉ là cái lỗi bthg
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.EMAIL_ALREADY_EXISTS,
+      status: HTTP_STATUS.UNAUTHORIZED //401
     })
-    throw customError
   }
 
   const result = await userServices.register(req.body)

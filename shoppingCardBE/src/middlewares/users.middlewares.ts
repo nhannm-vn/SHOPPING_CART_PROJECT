@@ -1,6 +1,9 @@
 // import các interface build-in(tạo sẵn) của express để mô tả
 import { Request, Response, NextFunction } from 'express'
 import { checkSchema } from 'express-validator'
+import HTTP_STATUS from '~/constants/httpStatus'
+import { USERS_MESSAGES } from '~/constants/messages'
+import { ErrorWithStatus } from '~/models/Errors'
 import { validate } from '~/utils/validation'
 
 //_middleware thực chất cũng chỉ là function
@@ -154,8 +157,10 @@ export const registerValidator = validate(
           //***Kiểm tra nếu mà chúng không giống nhau thì sẽ sẽ tạo ra lỗi và sẽ ném ra
           //sau đó lỗi sẽ đc lưu trong cuốn nhật kí của checkSchema
           if (value !== req.body.password) {
-            //_Lỗi khi ném ra sẽ được lưu vào note của validationChain
-            throw new Error(`Confirm_password doesn't match password`)
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.UNAUTHORIZED, //401
+              message: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD
+            })
           } else {
             return true
             //nếu mà giống nhau thì sẽ trả ra true, nghĩa là k báo lỗi gì hết
