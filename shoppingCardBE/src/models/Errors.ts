@@ -24,7 +24,7 @@ export class ErrorWithStatus {
 type ErrorsType = Record<
   string,
   {
-    msg: string
+    message: string
     [key: string]: any //này nghĩa ra ngoài ra muốn thêm vào gì thì thêm
   }
 >

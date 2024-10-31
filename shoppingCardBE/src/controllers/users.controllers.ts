@@ -59,7 +59,7 @@ export const registerController = async (
     //Bây giờ khi có lỗi thì mình sẽ đúc ra theo ErrorWithStatus vì thật ra nó cũng chỉ là cái lỗi bthg
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.EMAIL_ALREADY_EXISTS,
-      status: HTTP_STATUS.UNAUTHORIZED //401
+      status: HTTP_STATUS.UNPROCESSABLE_ENTITY //422
     })
   }
 
