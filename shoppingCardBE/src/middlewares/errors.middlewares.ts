@@ -16,7 +16,9 @@ import { Request, Response, NextFunction } from 'express'
 //tất cả lỗi sẽ đổ về đây và sẽ bắn ra ngoài thông qua res chứ không còn chỗ nào
 //cứ có lỗi thì bắn ra
 export const defaultErrorHanlder = (error: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(400).json(error)
+  res.status(400).json({
+    message: error.message
+  })
 }
 //error mình sẽ để any vì mình đâu biết nó lỗi nguồn nào đâu
 

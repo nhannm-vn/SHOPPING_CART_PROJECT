@@ -4,6 +4,7 @@
 import express from 'express'
 import { loginController, registerController } from '~/controllers/users.controllers'
 import { loginValidator, registerValidator } from '~/middlewares/users.middlewares'
+import { wrapAsync } from '~/utils/handlers'
 
 //_tạo user router
 const userRouter = express.Router()
@@ -33,7 +34,7 @@ userRouter.post('/login', loginValidator, loginController)
     validationChain của công nghệ express-validator(bộ lọc lỗi của express)
     vì nếu mình xài validationChain nó sẽ bị cấu trúc liên hoàn và không trực quan
 */
-userRouter.post('/register', registerValidator, registerController)
+userRouter.post('/register', registerValidator, wrapAsync(registerController))
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn

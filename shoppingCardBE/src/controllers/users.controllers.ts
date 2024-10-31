@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { RegisterReqBody } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 //_Nghĩa là trong table users có rất nhiều controller
 
@@ -48,34 +49,29 @@ export const registerController = async (
   const { email } = req.body
   //nhờ chiếc xe services truy cập tới và thêm dữ liệu vào database dùm mình
   //_Đã đụng tới database thì sẽ có trường hợp rớt mạng nên cần try-catch
-  try {
-    //_Kiểm tra nếu mà email đã trùng trên server rồi thì báo lỗi,
-    //nếu chưa có thì đi xuống dưới tiếp
-    const isDup = await userServices.checkEmailExist(email)
-    if (isDup) {
-      //_Nếu có lỗi thì throw xuống dưới để tập kết tại catch, mình có thể bắn ra nhưng sẽ dở vì đang nằm trong try-catch nên cho xuống catch luôn
-      const customError = new Error('Email has been used')
-      //throw là sẽ k xuống dưới nữa vì đang nằm trong try
 
-      //_Lưu ý: khi em new error thì ở trong nó sẽ có thuộc tính đb là message
-      //mà trong message bộ cờ có 1 thuộc tính mà để người khác nhìn thấy chính là enumerable
-      //=> để hiển thị phải mode lại
-      Object.defineProperty(customError, 'message', {
-        enumerable: true
-      })
-      throw customError
-    }
+  //_Kiểm tra nếu mà email đã trùng trên server rồi thì báo lỗi,
+  //nếu chưa có thì đi xuống dưới tiếp
+  const isDup = await userServices.checkEmailExist(email)
+  if (isDup) {
+    //_Nếu có lỗi thì throw xuống dưới để tập kết tại catch, mình có thể bắn ra nhưng sẽ dở vì đang nằm trong try-catch nên cho xuống catch luôn
+    const customError = new Error('Email has been used')
+    //throw là sẽ k xuống dưới nữa vì đang nằm trong try
 
-    const result = await userServices.register(req.body)
-    //_sau khi thêm thành công thì báo tín hiệu, đồng thời trả result ra cho người dùng
-    //_tạo thành công là 201
-    res.status(201).json({
-      message: 'Register success',
-      data: result
+    //_Lưu ý: khi em new error thì ở trong nó sẽ có thuộc tính đb là message
+    //mà trong message bộ cờ có 1 thuộc tính mà để người khác nhìn thấy chính là enumerable
+    //=> để hiển thị phải mode lại
+    Object.defineProperty(customError, 'message', {
+      enumerable: true
     })
-  } catch (error) {
-    //_Nếu rớt mạng hoặc có lỗi phái trên thì sẽ tập kết về đây. Tuy nhiên mình đã có tầng errorHandler
-    //nó sẽ là nơi tập kết và bắn tất cả lỗi ra ngoài nên mình sẽ next thay vì res nữa
-    next(error)
+    throw customError
   }
+
+  const result = await userServices.register(req.body)
+  //_sau khi thêm thành công thì báo tín hiệu, đồng thời trả result ra cho người dùng
+  //_tạo thành công là 201
+  res.status(HTTP_STATUS.CREATED).json({
+    message: 'Register success',
+    data: result
+  })
 }
