@@ -157,10 +157,11 @@ export const registerValidator = validate(
           //***Kiểm tra nếu mà chúng không giống nhau thì sẽ sẽ tạo ra lỗi và sẽ ném ra
           //sau đó lỗi sẽ đc lưu trong cuốn nhật kí của checkSchema
           if (value !== req.body.password) {
-            throw new ErrorWithStatus({
-              status: HTTP_STATUS.UNAUTHORIZED, //401
-              message: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD
-            })
+            // throw new ErrorWithStatus({
+            //   status: HTTP_STATUS.UNAUTHORIZED, //401
+            //   message: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD
+            // })
+            throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD)
           } else {
             return true
             //nếu mà giống nhau thì sẽ trả ra true, nghĩa là k báo lỗi gì hết
