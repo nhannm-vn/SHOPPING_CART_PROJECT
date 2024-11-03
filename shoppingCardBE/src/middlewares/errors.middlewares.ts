@@ -14,14 +14,31 @@
 import { Request, Response, NextFunction } from 'express'
 import { omit } from 'lodash'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { ErrorWithStatus } from '~/models/Errors'
 
 //tất cả lỗi sẽ đổ về đây và sẽ bắn ra ngoài thông qua res chứ không còn chỗ nào
 //cứ có lỗi thì bắn ra
 export const defaultErrorHanlder = (error: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json(omit(error, ['status']))
-  //hoặc là lỗi trong flow hoặc chỉ có thể là rớt mạng
+  //_Nếu là lỗi tạo từ ErrorWithStatus
+  //==> đừng lo vì lỗi Entity của middlware cũng được đúc từ cái class kế thừa ErrorWithtStatus nên cx sẽ đc vào if này
+  if (error instanceof ErrorWithStatus) {
+    res.status(error.status).json(omit(error, ['status']))
+  } else {
+    //_Đối với các lỗi bthg nghĩa là new Error, nghĩa là k có status thì quy về đây
+    //_Mở tất cả các thuộc tính để cho nếu có lỗi thì có thể báo và thấy được
+    //vì thường thì các lỗi bthg sẽ bị tắt enumerable
+    Object.getOwnPropertyNames(error).forEach((key) => {
+      Object.defineProperty(error, key, {
+        enumerable: true
+      })
+    })
 
-  //Lưu ý trước khi gửi lỗi cho người dùng thì nên cắt bỏ bớt status đi nếu không nó sẽ thừa đấy. Mình sẽ loại nó bằng omit
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: error.message,
+      //tất cả các thông tin còn lại, ngoại trừ nhạy cảm stack
+      errorInfor: omit(error, ['stack'])
+    })
+  }
 }
 //error mình sẽ để any vì mình đâu biết nó lỗi nguồn nào đâu
 

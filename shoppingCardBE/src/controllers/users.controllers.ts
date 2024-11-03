@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { RegisterReqBody } from '~/models/requests/users.request'
+import { LoginReqBody, RegisterReqBody } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -15,27 +15,6 @@ import { USERS_MESSAGES } from '~/constants/messages'
 
 //**Lưu ý: controller chỉ kiểm tra if-else for đồ thôi chứ k có kiểm tra xem dữ liệu có đúng kiểu hay đủ đầy nữa k
 //sau đó sẽ có cái xe trung chuyển tên services, sau đó cái xe dó mới lên databse và mang dữ liệu đưa về cho controller và controller đưa cho người dùng
-
-//_req ở trước hay sau middleware đều là 1
-export const loginController = (req: Request, res: Response) => {
-  //_trong req vẫn có body
-  const { email, password } = req.body
-  //mình sẽ dùng đại email và password để kiểm tra đại vì mình chưa có database
-  if (email === 'lehodiep.1999@gmail.com' && password === 'weArePiedTeam') {
-    res.status(200).json({
-      message: 'Login success',
-      data: {
-        fname: 'Điệp',
-        yob: 1999
-      }
-    })
-  } else {
-    //khi mà email or password không đúng so với database thì sẽ
-    res.status(401).json({
-      message: 'Invalid email or password'
-    })
-  }
-}
 
 //_làm controller cho register, và sẽ nhờ chiếc xe service đem dữ liệu từ controller đi qua database lưu và đem ngược về
 //sau đó bào cho người dùng
@@ -67,8 +46,29 @@ export const registerController = async (
   //_sau khi thêm thành công thì báo tín hiệu, đồng thời trả result ra cho người dùng
   //_tạo thành công là 201
   res.status(HTTP_STATUS.CREATED).json({
-    message: 'Register success',
+    message: USERS_MESSAGES.REGISTER_SUCCESS,
     //_khi mà tạo account thành công thì nó sẽ đưa cho mình 2 cái mã nằm bên trong result
-    data: result
+    result
+  })
+}
+
+//_req ở trước hay sau middleware đều là 1
+export const loginController = async (
+  req: Request<ParamsDictionary, any, LoginReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  // throw new Error('lỗi test thử message')
+  //==> new lỗi thường thì sẽ k nhìn thấy được
+  //_Chạy hàm kiểm tra xem có trong db không
+  const result = await userServices.login(req.body)
+  //_Nếu mà login thất bại thì throw đã bắn lỗi xuống catch và next đã đưa qua tầng xử lí lỗi rồi
+  //vì mình có kiến trúc wrapAsync nên mình k cần lo throw bể
+
+  //_Nếu mà có có lỗi thì nó đã xử lí luôn r. Còn nếu k có gì tới đây thì báo login thành công
+  //đồng thời bắn sắc lệnh ra cho ngta sử dụng
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.LOGIN_SUCCESS,
+    result
   })
 }

@@ -24,7 +24,7 @@ export const signToken = ({
   //*Vì mình muốn nó là promise và cụ thể muốn nó bất đồng bộ để một hồi
   //có thể cho ký access và refresh một lượt nên cần biến nó thành promise
   //*Để trở thành bát đồng bộ thì khi ký cần truyền thêm cho nó cái callback
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     //mình sẽ ký dựa vào hàm sign của jwt
     jwt.sign(payload, privateKey, options, (err, token) => {
       //nếu ký xong rồi mà bị lỗi thì sẽ dùng throw và reject vì đang trong promise và thằng đó sẽ là onRejected

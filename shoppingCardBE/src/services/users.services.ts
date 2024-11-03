@@ -3,10 +3,13 @@
 
 import User from '~/models/schemas/User.schema'
 import databaseServices from './database.services'
-import { RegisterReqBody } from '~/models/requests/users.request'
+import { LoginReqBody, RegisterReqBody } from '~/models/requests/users.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
 import { TokenType } from '~/constants/enums'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
+import { USERS_MESSAGES } from '~/constants/messages'
 
 class UserServices {
   //_Vì mình viết 2 chữ ký thì phải qua đây
@@ -71,6 +74,33 @@ class UserServices {
     return {
       accessToken,
       refreshToken
+    }
+  }
+
+  //login là hàm sẽ kiểm tra xem có người dùng truyền lên email và password có trong db không. Nếu có thì
+  //trả ra ac rf để ngta sử dụng luôn
+  async login({ email, password }: LoginReqBody) {
+    //_Lưu ý: muốn tìm thì phải hashPassword mới dò được. Vì mình lưu trên db dưới dạng hash
+    const user = await databaseServices.users.findOne({
+      email,
+      password: hashPassword(password)
+    })
+    //neu k tim thay
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+        message: USERS_MESSAGES.EMAIL_OR_PASSWORD_IS_INCORRECT
+      })
+    }
+    const user_id = user._id.toString()
+    //neu co thi tao ac va rf bthg
+    const [access_token, refresh_token] = await Promise.all([
+      this.signAccessToken(user_id),
+      this.signRefreshToken(user_id)
+    ])
+    return {
+      access_token,
+      refresh_token
     }
   }
 }
