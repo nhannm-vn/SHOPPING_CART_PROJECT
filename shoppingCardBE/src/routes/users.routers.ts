@@ -9,16 +9,6 @@ import { wrapAsync } from '~/utils/handlers'
 //_tạo user router
 const userRouter = express.Router()
 
-//_Nếu mình để userRouter.use() và bỏ các middleware vào thì nó sẽ bị toàn cục, nghĩa là
-//  cứ chạy qua route /users thi đều phải qua middleware đó. Nhưng mà mình chỉ muốn nó cục bộ và chạt riêng qua
-//  từng thằng mà thôi
-
-//_Mình sẽ làm chức năng login cho userRouter
-//  loginValidator nó nằm ở giữa và phải đáp ứng được là dữ liệu đi qua nó đc kiểm tra kĩ càng
-//  xong mới đi tới loginController. Viết như vậy thì middleware sẽ dành riêng cho từng thằng chứ k toàn cục cho tất cả
-//_Và vì mình login nên cần gửi dữ liệu lên là api post
-userRouter.post('/login', loginValidator, loginController)
-
 /*
     Description: Register a new user
     path: /register
@@ -35,6 +25,20 @@ userRouter.post('/login', loginValidator, loginController)
     vì nếu mình xài validationChain nó sẽ bị cấu trúc liên hoàn và không trực quan
 */
 userRouter.post('/register', registerValidator, wrapAsync(registerController))
+
+/*
+ Description: Login
+    path: users/login
+    method: post
+    body: {
+        email: string
+        password: string
+    }
+    
+    sử dụng checkSchema để kiểm tra dữ liệu thay thế cho
+    validationChain chấm liền hoàng như hồi nãy
+*/
+userRouter.post('/login', loginValidator, wrapAsync(loginController))
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn
