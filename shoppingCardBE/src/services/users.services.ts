@@ -10,6 +10,8 @@ import { TokenType } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
+import RefreshToken from '~/models/requests/RefreshToken.schema'
+import { ObjectId } from 'mongodb'
 
 class UserServices {
   //_Vì mình viết 2 chữ ký thì phải qua đây
@@ -66,14 +68,24 @@ class UserServices {
     //insertedid tuy nhiên nó là object cần biến về string
     const user_id = result.insertedId.toString()
 
-    const [accessToken, refreshToken] = await Promise.all([
+    const [access_token, refresh_token] = await Promise.all([
       this.signAccessToken(user_id),
       this.signRefreshToken(user_id)
     ])
+
+    //_trước khi trả 2 cái mã ra thì lưu rf vào collection
+
+    await databaseServices.refresh_tokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_token as string
+      })
+    )
+
     //==> Khi mà đăng ký thành công thì sẽ đưa luôn 2 cái chữ ký để người ta xài luôn
     return {
-      accessToken,
-      refreshToken
+      access_token,
+      refresh_token
     }
   }
 
@@ -98,6 +110,16 @@ class UserServices {
       this.signAccessToken(user_id),
       this.signRefreshToken(user_id)
     ])
+
+    //_trước khi trả 2 cái mã ra thì lưu rf vào collection
+
+    await databaseServices.refresh_tokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_token as string
+      })
+    )
+
     return {
       access_token,
       refresh_token

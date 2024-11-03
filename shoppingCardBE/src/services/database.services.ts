@@ -12,6 +12,7 @@ dotenv.config()
 
 //_fix về es_module cho hợp lệ ts
 import { Collection, Db, MongoClient } from 'mongodb'
+import RefreshToken from '~/models/requests/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@shoppingcardprojectclus.t8nte.mongodb.net/?retryWrites=true&w=majority&appName=shoppingCardProjectClusterAgain`
 
@@ -54,6 +55,11 @@ class DatabaseServices {
     //xài env để giấu luôn
     return this.db.collection(process.env.DB_USERS_COLLECTION as string)
     //vì nó quá bảo mật tới mức nó còn không hiểu thằng đó ở dạng gì cho nên phải thêm mô tả cho nó
+  }
+
+  //hàm giúp mình connect đi vào collection chuyên chứa các refresh_token
+  get refresh_tokens(): Collection<RefreshToken> {
+    return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string)
   }
 }
 //_Tạo ra instance rồi export
