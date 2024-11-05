@@ -3,7 +3,7 @@
 //_import đến express để tạo route
 import express from 'express'
 import { loginController, registerController } from '~/controllers/users.controllers'
-import { loginValidator, registerValidator } from '~/middlewares/users.middlewares'
+import { accessTokenValidator, loginValidator, registerValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
 
 //_tạo user router
@@ -39,6 +39,19 @@ userRouter.post('/register', registerValidator, wrapAsync(registerController))
     validationChain chấm liền hoàng như hồi nãy
 */
 userRouter.post('/login', loginValidator, wrapAsync(loginController))
+
+/*
+    Desription: Logout
+    path: users/logout
+    method: post
+    headers:{
+        Authorization: 'Bearer <access_token>'
+    }
+    body:{
+        refresh_token: string
+    }
+*/
+userRouter.post('/logout', accessTokenValidator)
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn

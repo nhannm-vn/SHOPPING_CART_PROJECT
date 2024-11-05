@@ -219,3 +219,28 @@ export const loginValidator = validate(
     ['body']
   )
 )
+
+//_Mình sẽ tách kiểm tra validation của access và refresh khi gửi riêng ra lên. Vì nếu access không ổn thì ngừng lại luôn
+
+export const accessTokenValidator = validate(
+  checkSchema(
+    {
+      Authorization: {
+        //_Đầu tiên là sẽ kiểm tra xem có gửi lên hay không
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+        },
+        //_Nếu có gửi lên rồi thì mình sẽ kiểm tra xem thử access_token có chữ ký đúng của mình không. Nếu có thì đưa lại nội dung payload và đồng thời lưu nó vào req để tiện sử dụng
+        custom: {
+          options: (value, { req }) => {
+            //_Đầu tiên phải cắt riêng cái token ra vì nó sẽ có dạng 'Bearer <access_token>'
+            //băm xong lấy phần tử thứ 1 là access_token luôn
+            const access_token = value.slit(' ')[1]
+          }
+        }
+      }
+    },
+    ['headers']
+  )
+  //khi gửi duex liệu lên nó sẽ nằm ở vùng header
+)
