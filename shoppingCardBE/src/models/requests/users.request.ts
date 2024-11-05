@@ -1,6 +1,9 @@
 //_Folder requests dùng để lưu các định nghĩa của request
 //_file users.request dùng để định nghĩa request của riêng collection users
 
+import { JwtPayload } from 'jsonwebtoken'
+import { TokenType } from '~/constants/enums'
+
 //_Định nghĩa: khi đăng kí register thì bên trong body của request sẽ chứa gì
 
 export interface RegisterReqBody {
@@ -14,4 +17,9 @@ export interface RegisterReqBody {
 export interface LoginReqBody {
   email: string
   password: string
+}
+
+export interface TokenPayload extends JwtPayload {
+  user_id: string
+  token_type: TokenType
 }

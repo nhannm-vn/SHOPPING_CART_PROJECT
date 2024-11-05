@@ -12,6 +12,8 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import RefreshToken from '~/models/requests/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
+import dotenv from 'dotenv'
+dotenv.config()
 
 class UserServices {
   //_Vì mình viết 2 chữ ký thì phải qua đây
@@ -26,6 +28,7 @@ class UserServices {
     return signToken({
       //_payload sẽ chứa user_id để định danh để biết nó là account nào, đồng thời chứa coi type của nó chức năng dùng để làm gì
       payload: { user_id, token_Type: TokenType.AccessToken },
+      privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
       //_option sẽ truyền cho nó thời gian hết hạn của nó, không để arthims thì mặc đinh là sh256
       options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
     })
@@ -34,6 +37,7 @@ class UserServices {
   private signRefreshToken = (user_id: string) => {
     return signToken({
       payload: { user_id, token_Type: TokenType.RefreshToken },
+      privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
       options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
     })
   }

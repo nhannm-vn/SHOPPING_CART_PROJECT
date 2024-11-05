@@ -4,7 +4,12 @@ import { checkSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
+import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
+import dotenv from 'dotenv'
+import { JsonWebTokenError } from 'jsonwebtoken'
+import { capitalize } from 'lodash'
+dotenv.config()
 
 //_middleware thực chất cũng chỉ là function
 //  trong này liên quan đến các file lọc dữ liệu liên quan đến users
@@ -232,10 +237,44 @@ export const accessTokenValidator = validate(
         },
         //_Nếu có gửi lên rồi thì mình sẽ kiểm tra xem thử access_token có chữ ký đúng của mình không. Nếu có thì đưa lại nội dung payload và đồng thời lưu nó vào req để tiện sử dụng
         custom: {
-          options: (value, { req }) => {
+          options: async (value, { req }) => {
             //_Đầu tiên phải cắt riêng cái token ra vì nó sẽ có dạng 'Bearer <access_token>'
             //băm xong lấy phần tử thứ 1 là access_token luôn
             const access_token = value.slit(' ')[1]
+            //_LƯU Ý: sẽ có trường hợp nó gửi lên chỉ co Bearer và như vậy cắt và lấy sẽ đc null đồng thời khi . sẽ bị crash cả hệ thống
+            //nên mình cần kiểm tra xem cắt có được token không. Nếu không có đấm luôn
+            if (!access_token) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.UNAUTHORIZED,
+                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+              })
+            }
+
+            //_Sau đó mình sẽ verify và kiểm tra thử xem bên trong access_token có đúng chữ ký của mình cung cấp không
+            //_Tuy nhiên trong quá trình verify vẫn có khả năng bug. Do verify không ra. Và lúc đó thì sẽ
+            //quăng ra lỗi 422 do mình đã có kiến trúc validate sẵn rồi. Nhưng mà mình k muốn 422 thì sẽ chụp lại và biến thành 401 sau đó quang ra tiếp
+            //và bug này thường do nó hack nên mình sẽ độ lại để chửi
+            //==> nghĩa là khi có lỗi thì mình sẽ k để nó đưa vào entityError mà mình sẽ trực tiếp quăng lỗi ra theo ý mình
+            try {
+              const decode_authorization = await verifyToken({
+                token: access_token,
+                privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+              })
+              //_Tuy nhiên sau khi kiểm tra thì decode của access_token sẽ bị mất vì khi chạy hàm xong thì nó sẽ bị mất
+              //==> nên sau khi mã hóa thì mình nên cất vào request để phía sau có thể lấy ra mà sử dụng tiếp được
+              //_Dùng hoisting
+              //LƯU Ý: mình cần ; vì nếu k thì nó sẽ nghĩa currying và có khả năng bug
+              ;(req as Request).decode_authorization = decode_authorization
+            } catch (error) {
+              //_nếu thất bại thì có thể đã bị tấn công và mình sẽ chửi theo dạng lỗi có sẵn luôn
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.UNAUTHORIZED, //401
+                message: capitalize((error as JsonWebTokenError).message)
+              })
+            }
+
+            //nếu mà ok valid hết thì:
+            return true
           }
         }
       }

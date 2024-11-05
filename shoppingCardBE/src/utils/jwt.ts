@@ -3,6 +3,7 @@
 
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import { TokenPayload } from '~/models/requests/users.request'
 dotenv.config()
 
 //*Viết thường vì nó là đại diện chứ không phải là các built-in interface để định nghĩa
@@ -13,12 +14,12 @@ export const signToken = ({
   //lấy mã này xài luôn đi, khỏi đổi
 
   //*Lưu ý: khi đã có giá trị options thì phải cho nó hiểu giá trị mặc định là gì nếu k thì sẽ bug
-  privateKey = process.env.JWT_SECRET as string,
+  privateKey,
   //nếu không truyền gì thì lấy thông tin này giúp
   options = { algorithm: 'HS256' }
 }: {
   payload: string | Buffer | object
-  privateKey?: string
+  privateKey: string
   options?: jwt.SignOptions
 }) => {
   //*Vì mình muốn nó là promise và cụ thể muốn nó bất đồng bộ để một hồi
@@ -39,3 +40,22 @@ export const signToken = ({
 //chữ ký mặc định xài arthims là 256
 //còn muốn thay đổi cách mã hóa hoặc là time của nó thì sẽ thông qua options, còn callback ở cuối
 //thì sẽ giúp nó asynchronus hay synchronus
+
+// -----------------------------------------------------------------------------------------------
+
+//_Viết hàm giúp kiểm tra một token có đúng với chữ ký hay không
+//nếu mà đúng thì trả ra payload đang có trong token đó
+//_payload là những nội dung mà mình đã đưa cho nó lúc  mà mình ký token
+//nên khi mình verify thì sẽ đưa lại cho mình sử dụng
+
+//_Truyền vào chữ ký bí mật và token cần verify
+export const verifyToken = ({ token, privateKey }: { token: string; privateKey: string }) => {
+  //_Mình cũng sẽ trả ra promise để có thể kiểm soát khi nào muốn ký
+  return new Promise<TokenPayload>((resolve, reject) => {
+    //decode chính là payload mà mính sẽ nhận được
+    jwt.verify(token, privateKey, (err, decoded) => {
+      if (err) throw reject(err)
+      else return resolve(decoded as TokenPayload)
+    })
+  })
+}
