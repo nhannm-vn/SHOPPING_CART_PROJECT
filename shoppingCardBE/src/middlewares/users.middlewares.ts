@@ -283,3 +283,40 @@ export const accessTokenValidator = validate(
   )
   //khi gửi duex liệu lên nó sẽ nằm ở vùng header
 )
+
+//*Vì sao mình cần phải kiểm tra tận 2 mã mà k kiểm tra 1 refreshToken thôi
+//==> vì có khả năng nó lấy đc 1 mã còn 1 mã chưa lấy đc nên làm v thì bm cao hơn
+
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
+        },
+        custom: {
+          options: async (value, { req }) => {
+            //value lúc này là refresh_token luôn
+            //_Nhưng lưu ý trong quá trinhg verify thì sẽ có lỗi. Mà thường lỗi là do hack nên mình đá con error lun
+            try {
+              const decode_refresh_token = await verifyToken({
+                token: value,
+                privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+              })
+              //_Nếu verify thành công thì lưu payload trả về vào req để tiện sử dụng
+              //còn không thì chửi nó
+              ;(req as Request).decode_refresh_token = decode_refresh_token
+            } catch (error) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.UNAUTHORIZED, //401
+                message: capitalize((error as JsonWebTokenError).message)
+              })
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
