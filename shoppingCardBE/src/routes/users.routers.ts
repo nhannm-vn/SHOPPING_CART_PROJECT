@@ -2,7 +2,7 @@
 
 //_import đến express để tạo route
 import express from 'express'
-import { loginController, registerController } from '~/controllers/users.controllers'
+import { loginController, logoutController, registerController } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
   loginValidator,
@@ -56,7 +56,7 @@ userRouter.post('/login', loginValidator, wrapAsync(loginController))
         refresh_token: string
     }
 */
-userRouter.post('/logout', accessTokenValidator, refreshTokenValidator)
+userRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController))
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn

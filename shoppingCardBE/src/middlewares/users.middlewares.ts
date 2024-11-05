@@ -240,7 +240,7 @@ export const accessTokenValidator = validate(
           options: async (value, { req }) => {
             //_Đầu tiên phải cắt riêng cái token ra vì nó sẽ có dạng 'Bearer <access_token>'
             //băm xong lấy phần tử thứ 1 là access_token luôn
-            const access_token = value.slit(' ')[1]
+            const access_token = value.split(' ')[1]
             //_LƯU Ý: sẽ có trường hợp nó gửi lên chỉ co Bearer và như vậy cắt và lấy sẽ đc null đồng thời khi . sẽ bị crash cả hệ thống
             //nên mình cần kiểm tra xem cắt có được token không. Nếu không có đấm luôn
             if (!access_token) {
