@@ -132,6 +132,7 @@ class UserServices {
         //_Vì user_id mình tự tạo nên mình sẽ update vào lúc register luôn
         _id: new ObjectId(user_id),
         ...payload,
+        email_verify_token,
         date_of_birth: new Date(payload.date_of_birth),
         //mã hóa luôn password trước khi lưu vào database
         password: hashPassword(payload.password)
@@ -211,21 +212,39 @@ class UserServices {
     await databaseServices.refresh_tokens.deleteOne({ token: refresh_token })
   }
 
-  // async verifyEmail(user_id: string) {
-  //   //_mình sẽ update verify về 1 và set email_verify_token = ''
-  //   databaseServices.users.updateOne(
-  //     { _id: new ObjectId(user_id) }, //
-  //     [
-  //       {
-  //         $set: {
-  //           verify: UserVerifyStatus.Verified,
-  //           email_verify_token: '',
-  //           updated_at: '$$NOW'
-  //         }
-  //       }
-  //     ]
-  //   )
-  // }
+  async verifyEmail(user_id: string) {
+    //_mình sẽ update verify về 1 và set email_verify_token = ''
+    await databaseServices.users.updateOne(
+      { _id: new ObjectId(user_id) }, //
+      [
+        {
+          $set: {
+            verify: UserVerifyStatus.Verified,
+            email_verify_token: '',
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+
+    //_Sau khi verify thành công thì cung cấp luôn dịch vụ cho họ xài bằng ac và rf
+    const [access_token, refresh_token] = await Promise.all([
+      this.signAccessToken(user_id),
+      this.signRefreshToken(user_id)
+    ])
+
+    //thêm refresh token vào collection
+    await databaseServices.refresh_tokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_token as string
+      })
+    )
+    return {
+      access_token,
+      refresh_token
+    }
+  }
 }
 
 //tạo ra instance rồi export

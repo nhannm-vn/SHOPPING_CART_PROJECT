@@ -11,6 +11,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { ErrorWithStatus } from '~/models/Errors'
 import { USERS_MESSAGES } from '~/constants/messages'
+import { UserVerifyStatus } from '~/constants/enums'
 
 //_Nghĩa là trong table users có rất nhiều controller
 
@@ -126,4 +127,21 @@ export const verifyEmailTokenController = async (
 
   //_Nếu mà đã tồn tại account rồi thì mình sẽ kiểm tra tiếp xem thử là verify đang ở trạng thái nào
   //nếu như đã verify rồi thì k làm gì hết chỉ báo thôi. Nếu mà banned thì cũng vào. Còn unverify thì mới tiến hành verify
+  if (user.verify == UserVerifyStatus.Verified) {
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.EMAIL_HAS_BEEN_VERIFIED
+    })
+  } else if (user.verify == UserVerifyStatus.Banned) {
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.EMAIL_HAS_BEEN_BANNED
+    })
+  } else {
+    //_nếu chưa verify thì tiến hành verify và cung cấp access và refresh để xài dịch vụ
+    const result = await userServices.verifyEmail(user_id)
+    //nếu thành công thì thông báo
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.VERIFY_EMAIL_SUCCESS,
+      result
+    })
+  }
 }
