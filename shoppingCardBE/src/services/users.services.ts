@@ -6,7 +6,7 @@ import databaseServices from './database.services'
 import { LoginReqBody, RegisterReqBody } from '~/models/requests/users.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
-import { TokenType } from '~/constants/enums'
+import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -27,7 +27,7 @@ class UserServices {
     //nên dẫn tới khi nào mình xài hàm thì mới cần await
     return signToken({
       //_payload sẽ chứa user_id để định danh để biết nó là account nào, đồng thời chứa coi type của nó chức năng dùng để làm gì
-      payload: { user_id, token_Type: TokenType.AccessToken },
+      payload: { user_id, token_type: TokenType.AccessToken },
       privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
       //_option sẽ truyền cho nó thời gian hết hạn của nó, không để arthims thì mặc đinh là sh256
       options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
@@ -36,9 +36,27 @@ class UserServices {
 
   private signRefreshToken = (user_id: string) => {
     return signToken({
-      payload: { user_id, token_Type: TokenType.RefreshToken },
+      payload: { user_id, token_type: TokenType.RefreshToken },
       privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
       options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
+    })
+  }
+
+  //_hàm ký ra email_verify_token
+  private signEmailVerifyToken = (user_id: string) => {
+    return signToken({
+      payload: { user_id, token_type: TokenType.EmailVerificationToken },
+      privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
+      options: { expiresIn: process.env.EMAIL_VERIFY_TOKEN_EXPIRE_IN }
+    })
+  }
+
+  //_hàm ký ra forgot_password_token
+  private signForgotPasswordToken = (user_id: string) => {
+    return signToken({
+      payload: { user_id, token_type: TokenType.ForgotPasswordToken },
+      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+      options: { expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRE_IN }
     })
   }
 
@@ -73,26 +91,36 @@ class UserServices {
   //register sẽ là hàm nhận vào object chứa email và password mà mình rã từ req.body ở bên controller
   //mình sẽ định nghĩa
   async register(payload: RegisterReqBody) {
-    const result = await databaseServices.users.insertOne(
+    const user_id = new ObjectId()
+
+    //_Khi đăng ký tài khoảng thì ký luôn cho nó cái token để soạn sẵn cái link và gửi về mail cho nó
+    const email_verify_token = await this.signEmailVerifyToken(user_id.toString())
+
+    await databaseServices.users.insertOne(
       new User({
+        //_Vì user_id mình tự tạo nên mình sẽ update vào lúc register luôn
+        _id: new ObjectId(user_id),
         ...payload,
         date_of_birth: new Date(payload.date_of_birth),
         //mã hóa luôn password trước khi lưu vào database
         password: hashPassword(payload.password)
       })
     )
+
+    //_Soạn sẵn cái đoạn link có chứa token và gửi về cho người dùng trong mail. Họ bấm vào là sẽ bắn ngược lại và mình sẽ kiểm tra các kiểu
+    //==> nghĩa là khi nó bấm vào đồ mình đã soạn sẵn thì mình sẽ xài chức năng verify-email. Lúc đó sẽ kiểm tra token có chuẩn k và tiến hành fix verify các kiểu
+    console.log(`
+        mô phỏng link email xác thực đăng ký:
+        http://localhost:3000/users/verify-email/?email_verify_token=${email_verify_token}
+    `)
+
     //_Lúc này khi đăng ký thành công thì sẽ tạo cho 2 cái mã và trả cho người dùng luôn để người dùng cầm quyền có thể đăng nhập vào liền
     //mình sẽ đợi 2 thằng này tạo ra mã sẽ tốn time nhưng mình sẽ cho 2 thằng chạy bất dồng bộ cho đỡn tốn time
     //vậy khi có tốn time thì sẽ tốn time 1 lần thôi
 
-    //_Mình muốn tạo ra 2 cái mã thì cần user_id để định danh tuy nhiên. Mình sẽ không biết
-    //cái mã đó lấy như thế nào. Tuy nhiên may mắn là trong result khi register đăng ký thành công thì có
-    //insertedid tuy nhiên nó là object cần biến về string
-    const user_id = result.insertedId.toString()
-
     const [access_token, refresh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
+      this.signAccessToken(user_id.toString()),
+      this.signRefreshToken(user_id.toString())
     ])
 
     //_trước khi trả 2 cái mã ra thì lưu rf vào collection
@@ -150,6 +178,22 @@ class UserServices {
 
   async logout(refresh_token: string) {
     await databaseServices.refresh_tokens.deleteOne({ token: refresh_token })
+  }
+
+  async verifyEmail(user_id: string) {
+    //_mình sẽ update verify về 1 và set email_verify_token = ''
+    databaseServices.users.updateOne(
+      { _id: new ObjectId(user_id) }, //
+      [
+        {
+          $set: {
+            verify: UserVerifyStatus.Verified,
+            email_verify_token: '',
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
   }
 }
 
