@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import {
+  ForgotPasswordReqBody,
   LoginReqBody,
   LogoutReqBody,
   RegisterReqBody,
@@ -169,6 +170,30 @@ export const resendEmailVerifyController = async (
     //_Sau đó thì thông báo gửi thành công là xong
     res.status(HTTP_STATUS.OK).json({
       message: USERS_MESSAGES.RESEND_EMAIL_VERIFY_TOKEN_SUCCESS
+    })
+  }
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Đầu tiên kiểm tra email người dùng cung cấp có tồn tại trên hệ thống hay không
+  const { email } = req.body
+  const hasEmail = await userServices.checkEmailExist(email)
+  if (!hasEmail) {
+    //thông báo k tìm thấy luôn
+    throw new ErrorWithStatus({
+      status: HTTP_STATUS.NOT_FOUND,
+      message: USERS_MESSAGES.USER_NOT_FOUND
+    })
+  } else {
+    //_viết hàm lưu token forgot_password_token và đường link dẫn đến giao diện lấy lại mật khẩu
+    await userServices.forgotPassword(email)
+    //_thông báo thành công
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
     })
   }
 }

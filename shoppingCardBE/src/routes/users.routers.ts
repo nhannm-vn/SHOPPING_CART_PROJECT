@@ -3,6 +3,7 @@
 //_import đến express để tạo route
 import express from 'express'
 import {
+  forgotPasswordController,
   loginController,
   logoutController,
   registerController,
@@ -11,6 +12,7 @@ import {
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
+  forgotPasswordValidator,
   loginValidator,
   refreshTokenValidator,
   registerValidator,
@@ -83,10 +85,11 @@ headers: {
 */
 userRouter.post('/resend-verify-email', accessTokenValidator, wrapAsync(resendEmailVerifyController))
 
-/*Description: 
+/*Description: khi người dùng đứng trên giao diện và bấm vào giao diện quên mật khẩu. Thì sẽ yêu cầu họ gửi email để thực hiện chức năng
 path: users/forgot-password
 method: post
 */
+userRouter.post('/forgot-password', forgotPasswordValidator, wrapAsync(forgotPasswordController))
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn

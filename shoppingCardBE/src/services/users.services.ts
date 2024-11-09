@@ -183,6 +183,18 @@ class UserServices {
     return user
   }
 
+  async findUserByEmail(email: string) {
+    const user = await databaseServices.users.findOne({ email })
+    //_nếu không tìm thấy thì báo lỗi luôn
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: USERS_MESSAGES.USER_NOT_FOUND
+      })
+    }
+    return user
+  }
+
   //login là hàm sẽ kiểm tra xem có người dùng truyền lên email và password có trong db không. Nếu có thì
   //trả ra ac rf để ngta sử dụng luôn
   async login({ email, password }: LoginReqBody) {
@@ -280,6 +292,34 @@ class UserServices {
       mô phỏng link email xác thực đăng ký:
       http://localhost:3000/users/verify-email/?email_verify_token=${email_verify_token}
     `)
+  }
+
+  async forgotPassword(email: string) {
+    //_tìm xem user nào bị quên mật khẩu dựa trên email
+    const user = (await this.findUserByEmail(email)) as User
+    //_Lấy user_id để ký forgot_password_token
+    const user_id = user._id as ObjectId
+    const forgot_password_token = await this.signForgotPasswordToken(user_id.toString())
+    //_Update cái mã đó vào database
+    await databaseServices.users.updateOne(
+      { _id: user_id }, //
+      [
+        {
+          $set: {
+            forgot_password_token,
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+
+    //_Soạn đoạn link có chứa token và gửi qua mail
+    //_gửi mail
+    console.log(`
+      mô phỏng gửi link qua mail để đổi mật khẩu:
+      http://localhost:8000/reset-password/?forgot_password_token=${forgot_password_token}
+    `)
+    //thứ em nhận được là đường link đến giao diện đổi mật khẩu
   }
 }
 

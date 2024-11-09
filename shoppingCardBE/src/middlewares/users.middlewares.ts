@@ -357,3 +357,21 @@ export const verifyEmailTokenValidator = validate(
     ['query']
   )
 )
+
+export const forgotPasswordValidator = validate(
+  checkSchema(
+    {
+      email: {
+        //_không được để trống
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+        },
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true
+      }
+    },
+    ['body']
+  )
+)
