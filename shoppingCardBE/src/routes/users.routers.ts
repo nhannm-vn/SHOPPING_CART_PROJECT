@@ -6,6 +6,7 @@ import {
   loginController,
   logoutController,
   registerController,
+  resendEmailVerifyController,
   verifyEmailTokenController
 } from '~/controllers/users.controllers'
 import {
@@ -71,6 +72,21 @@ khi họ bấm vào thì mình nó sẽ đưa cái token lên cho mình thông q
     method: get: vì người dùng chỉ bấm vào thôi còn gửi gì lên thì mình đã soạn sẵn rồi
 */
 userRouter.get('/verify-email/', verifyEmailTokenValidator, wrapAsync(verifyEmailTokenController))
+
+/*Dsc: trường hợp khi người dùng đã vào được ứng dụng rồi nhưng chưa verify và muốn verify để có thể sử dụng nhiều tính năng hơn
+path: users/resend-verify-email
+method: post
+headers: {
+    Authorization: 'Bearer <access-token>'
+}
+**[chức năng này cần đăng nhập rồi sử dụng] vì khi đó mới có access để gửi lên hệ thống
+*/
+userRouter.post('/resend-verify-email', accessTokenValidator, wrapAsync(resendEmailVerifyController))
+
+/*Description: 
+path: users/forgot-password
+method: post
+*/
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn

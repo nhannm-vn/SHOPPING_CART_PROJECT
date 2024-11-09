@@ -145,3 +145,30 @@ export const verifyEmailTokenController = async (
     })
   }
 }
+
+export const resendEmailVerifyController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_lấy user_id và kiểm tra thử xem account có tồn tại không
+  const { user_id } = req.decode_authorization as TokenPayload
+  const user = await userServices.findUserById(user_id)
+  //_Nếu mà bị unverify thì mới cần resend email. Chứ banned hay verify rồi thì resend nữa làm gì
+  if (user.verify == UserVerifyStatus.Verified) {
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.EMAIL_HAS_BEEN_VERIFIED
+    })
+  } else if (user.verify == UserVerifyStatus.Banned) {
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.EMAIL_HAS_BEEN_BANNED
+    })
+  } else {
+    //_Nếu mà chưa verify thì mình sẽ tiến hành gửi lại mã
+    await userServices.resendEmailVerify(user_id)
+    //_Sau đó thì thông báo gửi thành công là xong
+    res.status(HTTP_STATUS.OK).json({
+      message: USERS_MESSAGES.RESEND_EMAIL_VERIFY_TOKEN_SUCCESS
+    })
+  }
+}

@@ -171,6 +171,18 @@ class UserServices {
     }
   }
 
+  async findUserById(user_id: string) {
+    const user = await databaseServices.users.findOne({ _id: new ObjectId(user_id) })
+    //_nếu không tìm thấy thì báo lỗi luôn
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: USERS_MESSAGES.USER_NOT_FOUND
+      })
+    }
+    return user
+  }
+
   //login là hàm sẽ kiểm tra xem có người dùng truyền lên email và password có trong db không. Nếu có thì
   //trả ra ac rf để ngta sử dụng luôn
   async login({ email, password }: LoginReqBody) {
@@ -244,6 +256,30 @@ class UserServices {
       access_token,
       refresh_token
     }
+  }
+
+  async resendEmailVerify(user_id: string) {
+    //_Mình sẽ ký lại mã mới và update trên databse đồng thời gửi cho họ
+    //_Tạo lại mã email_verify_token
+    const email_verify_token = await this.signEmailVerifyToken(user_id)
+
+    //_update mã verify trên hệ thống
+    await databaseServices.users.updateOne(
+      { _id: new ObjectId(user_id) }, //_tìm kiếm thằng cần update
+      [
+        {
+          $set: {
+            email_verify_token,
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+    //_gửi mail verify lại cho người dùng:
+    console.log(`
+      mô phỏng link email xác thực đăng ký:
+      http://localhost:3000/users/verify-email/?email_verify_token=${email_verify_token}
+    `)
   }
 }
 
