@@ -3,7 +3,7 @@
 
 import { JwtPayload } from 'jsonwebtoken'
 import { TokenType } from '~/constants/enums'
-
+import { ParsedQs } from 'qs'
 //_Định nghĩa: khi đăng kí register thì bên trong body của request sẽ chứa gì
 
 export interface RegisterReqBody {
@@ -26,4 +26,8 @@ export interface TokenPayload extends JwtPayload {
 
 export interface LogoutReqBody {
   refresh_token: string
+}
+
+export interface VerifyEmailToken extends ParsedQs {
+  email_verify_token: string
 }

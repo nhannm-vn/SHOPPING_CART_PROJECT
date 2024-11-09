@@ -320,3 +320,40 @@ export const refreshTokenValidator = validate(
     ['body']
   )
 )
+
+export const verifyEmailTokenValidator = validate(
+  checkSchema(
+    {
+      email_verify_token: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED
+        },
+        trim: true,
+        //_viết hàm kiểm tra xem email verify token có phải do mình ký không
+        custom: {
+          options: async (value: string, { req }) => {
+            //value: email_verify_token
+            //_Trong quá trình kiểm tra có khả năng verify thất bại do token hết hạn hoặc không đúng mà mình muốn coi nó như là trhop đacbiet
+            try {
+              const decode_email_verify_token = await verifyToken({
+                token: value,
+                privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
+              })
+              //nếu đúng là do mình ký hợp hệ thì sẽ thu được payload sau đó mình sẽ lưu vào req để tiện sử dụng
+              ;(req as Request).decode_email_verify_token = decode_email_verify_token
+            } catch (error) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.UNAUTHORIZED,
+                //chửi theo câu chửi của hệ thống luôn cho hay
+                message: (error as JsonWebTokenError).message
+              })
+            }
+            //_nếu mà ok hết thì return true để cho qua
+            return true
+          }
+        }
+      }
+    },
+    ['query']
+  )
+)

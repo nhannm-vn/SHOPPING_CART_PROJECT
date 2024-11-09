@@ -2,12 +2,18 @@
 
 //_import đến express để tạo route
 import express from 'express'
-import { loginController, logoutController, registerController } from '~/controllers/users.controllers'
+import {
+  loginController,
+  logoutController,
+  registerController,
+  verifyEmailTokenController
+} from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
   loginValidator,
   refreshTokenValidator,
-  registerValidator
+  registerValidator,
+  verifyEmailTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
 
@@ -64,6 +70,7 @@ khi họ bấm vào thì mình nó sẽ đưa cái token lên cho mình thông q
           họ sẽ gửi email_verify_token lên cho mình thông qua query
     method: get: vì người dùng chỉ bấm vào thôi còn gửi gì lên thì mình đã soạn sẵn rồi
 */
+userRouter.get('/verify-email/', verifyEmailTokenValidator, wrapAsync(verifyEmailTokenController))
 
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn

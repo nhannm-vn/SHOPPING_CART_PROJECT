@@ -72,7 +72,13 @@ class UserServices {
 
   //_hàm kiểm tra refresh_token có trong hệ thống hay không
   //mình kỹ nên mình sẽ tìm dựa trên thêm user_id nữa
-  async checkRefreshToken({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
+  async checkRefreshToken({
+    user_id, //
+    refresh_token
+  }: {
+    user_id: string
+    refresh_token: string
+  }) {
     const refreshToken = await databaseServices.refresh_tokens.findOne({
       token: refresh_token,
       user_id: new ObjectId(user_id)
@@ -86,6 +92,31 @@ class UserServices {
       })
     }
     return refreshToken
+  }
+
+  async checkEmailVerifyToken({
+    user_id, //
+    email_verify_token
+  }: {
+    user_id: string
+    email_verify_token: string
+  }) {
+    const user = await databaseServices.users.findOne({
+      _id: new ObjectId(user_id),
+      email_verify_token
+    })
+
+    //_Nếu không có user thì báo lỗi luôn// Nếu k tìm thấy chỉ có thể là hết hạn
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+        message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID
+      })
+    }
+
+    //_Nếu bthg thì return ra luôn user
+    return user
   }
 
   //register sẽ là hàm nhận vào object chứa email và password mà mình rã từ req.body ở bên controller
@@ -180,21 +211,21 @@ class UserServices {
     await databaseServices.refresh_tokens.deleteOne({ token: refresh_token })
   }
 
-  async verifyEmail(user_id: string) {
-    //_mình sẽ update verify về 1 và set email_verify_token = ''
-    databaseServices.users.updateOne(
-      { _id: new ObjectId(user_id) }, //
-      [
-        {
-          $set: {
-            verify: UserVerifyStatus.Verified,
-            email_verify_token: '',
-            updated_at: '$$NOW'
-          }
-        }
-      ]
-    )
-  }
+  // async verifyEmail(user_id: string) {
+  //   //_mình sẽ update verify về 1 và set email_verify_token = ''
+  //   databaseServices.users.updateOne(
+  //     { _id: new ObjectId(user_id) }, //
+  //     [
+  //       {
+  //         $set: {
+  //           verify: UserVerifyStatus.Verified,
+  //           email_verify_token: '',
+  //           updated_at: '$$NOW'
+  //         }
+  //       }
+  //     ]
+  //   )
+  // }
 }
 
 //tạo ra instance rồi export

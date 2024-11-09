@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
-import { LoginReqBody, LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/users.request'
+import {
+  LoginReqBody,
+  LogoutReqBody,
+  RegisterReqBody,
+  TokenPayload,
+  VerifyEmailToken
+} from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -106,4 +112,18 @@ export const logoutController = async (
   res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.LOGOUT_SUCCESS
   })
+}
+
+export const verifyEmailTokenController = async (
+  req: Request<ParamsDictionary, any, any, VerifyEmailToken>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Đầu tiên kiểm tra xem acount đó có tồn tại trong hệ thống không. Bằng user_id và email_verify_token
+  const { user_id } = req.decode_email_verify_token as TokenPayload
+  const { email_verify_token } = req.query
+  const user = await userServices.checkEmailVerifyToken({ user_id, email_verify_token })
+
+  //_Nếu mà đã tồn tại account rồi thì mình sẽ kiểm tra tiếp xem thử là verify đang ở trạng thái nào
+  //nếu như đã verify rồi thì k làm gì hết chỉ báo thôi. Nếu mà banned thì cũng vào. Còn unverify thì mới tiến hành verify
 }
