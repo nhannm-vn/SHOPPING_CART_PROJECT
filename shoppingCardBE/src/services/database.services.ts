@@ -12,7 +12,7 @@ dotenv.config()
 
 //_fix về es_module cho hợp lệ ts
 import { Collection, Db, MongoClient } from 'mongodb'
-import RefreshToken from '~/models/requests/RefreshToken.schema'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@shoppingcardprojectclus.t8nte.mongodb.net/?retryWrites=true&w=majority&appName=shoppingCardProjectClusterAgain`
 

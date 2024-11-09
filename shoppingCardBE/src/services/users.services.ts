@@ -10,7 +10,7 @@ import { TokenType } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
-import RefreshToken from '~/models/requests/RefreshToken.schema'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import dotenv from 'dotenv'
 dotenv.config()
@@ -50,6 +50,24 @@ class UserServices {
       email: email
     })
     return Boolean(user)
+  }
+
+  //_hàm kiểm tra refresh_token có trong hệ thống hay không
+  //mình kỹ nên mình sẽ tìm dựa trên thêm user_id nữa
+  async checkRefreshToken({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
+    const refreshToken = await databaseServices.refresh_tokens.findOne({
+      token: refresh_token,
+      user_id: new ObjectId(user_id)
+    })
+    //nếu mà k tìm thấy thì bắn ra lỗi luôn. Và bên controller sẽ k sợ bung khi gọi hàm check. Vì nó đã
+    //wrapAsync bao bọc nên nếu có lỗi thì sẽ dc tập kết về tầng xử lý
+    if (!refreshToken) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.REFRESH_TOKEN_IS_INVALID,
+        status: HTTP_STATUS.UNAUTHORIZED
+      })
+    }
+    return refreshToken
   }
 
   //register sẽ là hàm nhận vào object chứa email và password mà mình rã từ req.body ở bên controller
@@ -128,6 +146,10 @@ class UserServices {
       access_token,
       refresh_token
     }
+  }
+
+  async logout(refresh_token: string) {
+    await databaseServices.refresh_tokens.deleteOne({ token: refresh_token })
   }
 }
 

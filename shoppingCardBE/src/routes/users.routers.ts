@@ -58,6 +58,13 @@ userRouter.post('/login', loginValidator, wrapAsync(loginController))
 */
 userRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapAsync(logoutController))
 
+/*Dsc: khi người dùng đăng ký(register) thì mình tạo một cái link có kèm token xác thực và gửi vào mail cho họ
+khi họ bấm vào thì mình nó sẽ đưa cái token lên cho mình thông qua query. Mình sẽ cầm cái đó và xác thực xem chuẩn không. nếu chuẩn thì verify cho người dùng 
+    path: users/verify-email/?email_verify_token=string
+          họ sẽ gửi email_verify_token lên cho mình thông qua query
+    method: get: vì người dùng chỉ bấm vào thôi còn gửi gì lên thì mình đã soạn sẵn rồi
+*/
+
 //_Công khai userRouter
 //  vì trùng tên file nên công khai theo default luôn
 export default userRouter

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { LoginReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/users.request'
+import { LoginReqBody, LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -73,11 +73,16 @@ export const loginController = async (
   })
 }
 
-export const logoutController = (req: Request, res: Response, next: NextFunction) => {
+export const logoutController = async (
+  req: Request<ParamsDictionary, any, LogoutReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
   //_Nó muốn logout thì đưa cho mình 2 cái mã. Và mình đã kiểm tra 2 cái mã đó là đúng do mình ký ra cho nó rồi
   //_Nhưng còn đòn hiểm ác là nó gửi ac của nó mà rf của mình. Thì cùng là mình ký nhưng user_id ở trong khác nhau. Nên cần kt
   const { user_id: user_id_at } = req.decode_authorization as TokenPayload
   const { user_id: user_id_rf } = req.decode_refresh_token as TokenPayload
+  const { refresh_token } = req.body
 
   //_Nếu không giống nhau thì báo lỗi đb luôn
   if (user_id_at != user_id_rf) {
@@ -88,4 +93,17 @@ export const logoutController = (req: Request, res: Response, next: NextFunction
   }
 
   //_nếu cả 2 đều có id chuẩn rồi thì mình check thử xem là nó có quyền được sử dụng dịch vụ hay không
+  //nếu có thì mới cho sử dụng dịch vụ logout
+  await userServices.checkRefreshToken({
+    user_id: user_id_at,
+    refresh_token
+  })
+
+  // khi nào có mã đó trong database thì mình tiến hành logout nghĩa là xóa rf khỏi hệ thống
+  await userServices.logout(refresh_token)
+
+  //_Nếu xóa thành công thì sẽ xuống dưới đây. Mà nếu tới đây thì thông báo thành công
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.LOGOUT_SUCCESS
+  })
 }
