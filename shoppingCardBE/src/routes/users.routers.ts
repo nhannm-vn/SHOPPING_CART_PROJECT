@@ -4,6 +4,7 @@
 import express from 'express'
 import {
   forgotPasswordController,
+  getMeController,
   loginController,
   logoutController,
   registerController,
@@ -124,6 +125,19 @@ userRouter.post(
   resetPasswordValidator, //kiểm tra password, confirm_password
   wrapAsync(resetPasswordController)
 )
+
+/*Desc: chức năng giúp lấy profile về. 
+[Lưu ý phải login mới sử dụng chức năng này được. Vì khi đó mình mới có access_token để sử dụng]
+//_Lưu ý không lấy về thông tin quá nhạy cảm
+    path: users/me
+    method: post
+    body: {
+        headers: {
+            Authorization: 'Bearer <access_token>'
+        }
+    }
+*/
+userRouter.post('/me', accessTokenValidator, wrapAsync(getMeController))
 
 export default userRouter
 

@@ -246,3 +246,9 @@ export const resetPasswordController = async (
     message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
   })
 }
+
+export const getMeController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {}
