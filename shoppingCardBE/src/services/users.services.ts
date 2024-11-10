@@ -363,6 +363,22 @@ class UserServices {
       ]
     )
   }
+
+  async getMe(user_id: string) {
+    const userInfor = await databaseServices.users.findOne(
+      { _id: new ObjectId(user_id) }, //
+      {
+        //_Khi lay thi giau bot thong tin nhay cam
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+    //_Mình có thể lấy user qua kia rồi mới lọc thông tin bằng omit tuy nhiên v nó sẽ k hay
+    //_Neu k thay thi bao loi luon
+  }
 }
 
 //tạo ra instance rồi export

@@ -247,8 +247,9 @@ export const resetPasswordController = async (
   })
 }
 
-export const getMeController = async (
-  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
-  res: Response,
-  next: NextFunction
-) => {}
+export const getMeController = async (req: Request<ParamsDictionary, any, any>, res: Response, next: NextFunction) => {
+  //_Lấy user_id
+  const { user_id } = req.decode_authorization as TokenPayload
+  //_Dựa vào user_id tìm kiếm và trả thông tin về
+  const userInfor = await userServices.getMe(user_id)
+}
