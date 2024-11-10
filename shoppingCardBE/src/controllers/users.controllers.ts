@@ -6,6 +6,7 @@ import {
   RegisterReqBody,
   ResetPasswordReqBody,
   TokenPayload,
+  UpdateMeReqBody,
   VerifyEmailToken,
   VerifyForgotPasswordTokenReqBody
 } from '~/models/requests/users.request'
@@ -252,4 +253,40 @@ export const getMeController = async (req: Request<ParamsDictionary, any, any>, 
   const { user_id } = req.decode_authorization as TokenPayload
   //_Dựa vào user_id tìm kiếm và trả thông tin về
   const userInfor = await userServices.getMe(user_id)
+
+  //_Thong bao va dua thong tin
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.GET_PROFILE_SUCCESS,
+    userInfor
+  })
+}
+
+export const updateMeController = async (
+  req: Request<ParamsDictionary, any, UpdateMeReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Người dùng truyền lên access_token và từ đó mình biết được họ là ai
+  const { user_id } = req.decode_authorization as TokenPayload
+  //_Nội dung họ muốn update thì gọi chung là payload
+  const payload = req.body as UpdateMeReqBody
+  //_Muốn update thì phải kiểm tra xem có user đó trên db không và có verify email chưa. Verify rồi thì mới update
+  const isVerified = await userServices.checkEmailVerified(user_id)
+  //_Nếu chưa verify thì báo và dừng đây luôn. Còn verify rồi thì đi tiếp
+  if (!isVerified) {
+    throw new ErrorWithStatus({
+      status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+      message: USERS_MESSAGES.USER_NOT_VERIFIED
+    })
+  }
+
+  //_Sau khi check rồi thì tiến hành update profile
+  //truyền vào user_id để tiện việc xài combo tìm và update
+  const userInfor = await userServices.updateMe({ user_id, payload })
+
+  //thông báo cho người dùng
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.UPDATE_PROFILE_SUCCESS,
+    userInfor
+  })
 }

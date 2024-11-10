@@ -3,7 +3,7 @@
 
 import User from '~/models/schemas/User.schema'
 import databaseServices from './database.services'
-import { LoginReqBody, RegisterReqBody } from '~/models/requests/users.request'
+import { LoginReqBody, RegisterReqBody, UpdateMeReqBody } from '~/models/requests/users.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
 import { TokenType, UserVerifyStatus } from '~/constants/enums'
@@ -138,6 +138,11 @@ class UserServices {
       })
     }
     return user
+  }
+
+  async checkEmailVerified(user_id: string) {
+    const user = await databaseServices.users.findOne({ _id: new ObjectId(user_id) })
+    return user?.verify == UserVerifyStatus.Verified
   }
 
   //register sẽ là hàm nhận vào object chứa email và password mà mình rã từ req.body ở bên controller
@@ -365,7 +370,7 @@ class UserServices {
   }
 
   async getMe(user_id: string) {
-    const userInfor = await databaseServices.users.findOne(
+    const user = await databaseServices.users.findOne(
       { _id: new ObjectId(user_id) }, //
       {
         //_Khi lay thi giau bot thong tin nhay cam
@@ -378,6 +383,66 @@ class UserServices {
     )
     //_Mình có thể lấy user qua kia rồi mới lọc thông tin bằng omit tuy nhiên v nó sẽ k hay
     //_Neu k thay thi bao loi luon
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: USERS_MESSAGES.USER_NOT_FOUND
+      })
+    }
+    return user
+  }
+
+  async updateMe({
+    user_id, //
+    payload
+  }: {
+    user_id: string
+    payload: UpdateMeReqBody
+  }) {
+    //_1. Cái dở là mình sẽ không biết được payload chứa gì
+    //_2. nếu truyền lên date_of_birth thì phải đổi lại kiểu dữ liệu
+    const _payload = payload.date_of_birth
+      ? {
+          ...payload,
+          date_of_birth: new Date(payload.date_of_birth)
+        }
+      : payload
+    //_3. nếu truyền lên username thì phải kiểm tra coi có phải là duy nhất không(unique)
+    if (_payload.username) {
+      const user = await databaseServices.users.findOne({ username: _payload.username })
+      //nếu có thì báo lỗi và dừng cuộc chơi
+      if (user) {
+        throw new ErrorWithStatus({
+          message: USERS_MESSAGES.USERNAME_ALREADY_EXISTS,
+          status: HTTP_STATUS.UNPROCESSABLE_ENTITY
+        })
+      }
+    }
+
+    //****Mình sẽ xài method đặc biệt của mongo giúp vừa tìm vừa update và trả ra kết quả update. Đó là lý do tại sao truyền id và payload
+    const userInfor = await databaseServices.users.findOneAndUpdate(
+      { _id: new ObjectId(user_id) }, //
+      [
+        {
+          $set: {
+            ..._payload,
+            updated_at: '$$NOW'
+          }
+        }
+      ],
+      //update xong thì mới trả ra. Và combo giấu luôn nhạy cảm
+      {
+        returnDocument: 'after',
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+
+    //_Trả thông tin ra cho người dùng
+    return userInfor
   }
 }
 
