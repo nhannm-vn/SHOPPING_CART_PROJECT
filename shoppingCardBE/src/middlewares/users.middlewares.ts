@@ -8,7 +8,7 @@ import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
 import dotenv from 'dotenv'
 import { JsonWebTokenError } from 'jsonwebtoken'
-import { capitalize } from 'lodash'
+import { capitalize, values } from 'lodash'
 dotenv.config()
 
 //_middleware thực chất cũng chỉ là function
@@ -370,6 +370,43 @@ export const forgotPasswordValidator = validate(
           errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
         },
         trim: true
+      }
+    },
+    ['body']
+  )
+)
+
+export const forgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED
+        },
+        //_hàm custom giúp kiểm tra chữ ký có chuẩn hay không
+        custom: {
+          options: async (value: string, { req }) => {
+            // value: forgot_password_token
+            try {
+              //_trong quá trình verify thì có khả năng rớt mạng nên cần bọc vào try-catch để báo lỗi theo ý mình
+              //_nếu thành công thì đc decode
+              const decode_forgot_password_token = await verifyToken({
+                token: value,
+                privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+              })
+              //_lưu decode vào req để tiện sử dụng dần về sau
+              ;(req as Request).decode_forgot_password_token = decode_forgot_password_token
+            } catch (error) {
+              //_nếu verify thất bại thì throw lỗi để ghi vào cuốn sổ
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.UNAUTHORIZED,
+                message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
+              })
+            }
+            //_nếu vượt qua hết thì cho qua lưới lọc
+            return true
+          }
+        }
       }
     },
     ['body']

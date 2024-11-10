@@ -12,6 +12,7 @@ import {
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
+  forgotPasswordTokenValidator,
   forgotPasswordValidator,
   loginValidator,
   refreshTokenValidator,
@@ -98,6 +99,10 @@ userRouter.post('/forgot-password', forgotPasswordValidator, wrapAsync(forgotPas
         forgot_password_token: string
     }
 */
+userRouter.post(
+  '/verify-forgot-password',
+  forgotPasswordTokenValidator // hàm kiểm tra forgot-password-token
+)
 
 export default userRouter
 
