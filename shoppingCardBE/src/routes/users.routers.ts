@@ -86,13 +86,19 @@ headers: {
 userRouter.post('/resend-verify-email', accessTokenValidator, wrapAsync(resendEmailVerifyController))
 
 /*Description: khi người dùng đứng trên giao diện và bấm vào giao diện quên mật khẩu. Thì sẽ yêu cầu họ gửi email để thực hiện chức năng
-path: users/forgot-password
-method: post
+    path: users/forgot-password
+    method: post
 */
 userRouter.post('/forgot-password', forgotPasswordValidator, wrapAsync(forgotPasswordController))
 
-//_Công khai userRouter
-//  vì trùng tên file nên công khai theo default luôn
+/*Desc: kiểm tra xem forgot_password_token còn ok, còn sử dụng được hay không
+    path: users/verify-forgot-password
+    method: post
+    body:{
+        forgot_password_token: string
+    }
+*/
+
 export default userRouter
 
 //*NOTE: nếu mình chỉ viết checkSchema thì nó vẫn sẽ lọc lỗi. Tuy nhiên có lỗi k valid gì
