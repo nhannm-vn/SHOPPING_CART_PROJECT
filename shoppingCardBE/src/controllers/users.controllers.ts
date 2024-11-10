@@ -197,3 +197,11 @@ export const forgotPasswordController = async (
     })
   }
 }
+
+export const verifyForgotPasswordTokenController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Lấy user_id v
+}

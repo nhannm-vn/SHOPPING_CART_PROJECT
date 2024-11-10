@@ -8,7 +8,8 @@ import {
   logoutController,
   registerController,
   resendEmailVerifyController,
-  verifyEmailTokenController
+  verifyEmailTokenController,
+  verifyForgotPasswordTokenController
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
@@ -101,7 +102,8 @@ userRouter.post('/forgot-password', forgotPasswordValidator, wrapAsync(forgotPas
 */
 userRouter.post(
   '/verify-forgot-password',
-  forgotPasswordTokenValidator // hàm kiểm tra forgot-password-token
+  forgotPasswordTokenValidator, // hàm kiểm tra forgot-password-token
+  wrapAsync(verifyForgotPasswordTokenController)
 )
 
 export default userRouter

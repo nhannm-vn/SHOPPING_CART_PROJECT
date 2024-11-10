@@ -1,6 +1,6 @@
 // import các interface build-in(tạo sẵn) của express để mô tả
 import { Request, Response, NextFunction } from 'express'
-import { checkSchema } from 'express-validator'
+import { checkSchema, ParamSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
@@ -30,141 +30,184 @@ dotenv.config()
 //_Bây giờ mình sẽ sử dụng công nghệ express-validator để làm lưới lọc middleware chắn
 //các dữ liệu không valid
 //_Tuy nhiên mình sẽ sử dụng checkSchema RunnableValidationChain(New) thay cho cách viết ValidationChain(old)
+//
+//****PARAMSCHEMA
+const passwordSchema: ParamSchema = {
+  notEmpty: {
+    errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
+  },
+  isString: {
+    errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_A_STRING
+  },
+  //_Do dai rang buoc
+  isLength: {
+    options: {
+      min: 8,
+      max: 50
+    },
+    //_Neu khong theo thi chui
+    errorMessage: USERS_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
+  },
+  //_Kiem tra strong password, nó còn có thể cho biết và đánh giá password như thế nào là mạnh
+  isStrongPassword: {
+    options: {
+      minLowercase: 1,
+      minUppercase: 1,
+      minSymbols: 1,
+      minNumbers: 1,
+      minLength: 8
+      // returnScore
+    },
+    //_Neu khong dat thi chui
+    errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRONG
+  }
+}
+
+const confirmPasswordScheam: ParamSchema = {
+  notEmpty: {
+    errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED
+  },
+  isString: {
+    errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING
+  },
+  //_Do dai rang buoc
+  isLength: {
+    options: {
+      min: 8,
+      max: 50
+    },
+    //_Neu khong theo thi chui
+    errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
+  },
+  //_Kiem tra strong confirm_password, nó còn có thể cho biết và đánh giá confirm_password như thế nào là mạnh
+  isStrongPassword: {
+    options: {
+      minLowercase: 1,
+      minUppercase: 1,
+      minSymbols: 1,
+      minNumbers: 1,
+      minLength: 8
+      // returnScore
+    },
+    //_Neu khong dat thi chui
+    errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRONG
+  },
+  //_Đối với confirm_password thì mình cần kiểm tra thêm có giống password hay chưa
+  //nhưng mình không có hàm đó thì mình phải tự viết bằng cách sử dụng custom
+  //_Sử dụng express-validator sẽ giúp mình giảm thiểu việc phải sử dụng if-else. Tuy nhiên đối với những hàm
+  //quá cá nhân thì cũng phải sử dụng if-else
+  custom: {
+    //_Đây sẽ là hàm kiểm tra xem password và confirm_password có giống nhau hay là không
+    //value: confirm_password và password nằm trong body và nằm trong req, nhưng mình truyền {req} để khi . nó sẽ  hiểu là object và dễ dàng dùng
+    options: (value, { req }) => {
+      //***Kiểm tra nếu mà chúng không giống nhau thì sẽ sẽ tạo ra lỗi và sẽ ném ra
+      //sau đó lỗi sẽ đc lưu trong cuốn nhật kí của checkSchema
+      if (value !== req.body.password) {
+        // throw new ErrorWithStatus({
+        //   status: HTTP_STATUS.UNAUTHORIZED, //401
+        //   message: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD
+        // })
+        throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD)
+      } else {
+        return true
+        //nếu mà giống nhau thì sẽ trả ra true, nghĩa là k báo lỗi gì hết
+      }
+    }
+  }
+}
+
+const forgotPasswordTokenSchema: ParamSchema = {
+  notEmpty: {
+    errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED
+  },
+  //_hàm custom giúp kiểm tra chữ ký có chuẩn hay không
+  custom: {
+    options: async (value: string, { req }) => {
+      // value: forgot_password_token
+      try {
+        //_trong quá trình verify thì có khả năng rớt mạng nên cần bọc vào try-catch để báo lỗi theo ý mình
+        //_nếu thành công thì đc decode
+        const decode_forgot_password_token = await verifyToken({
+          token: value,
+          privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+        })
+        //_lưu decode vào req để tiện sử dụng dần về sau
+        ;(req as Request).decode_forgot_password_token = decode_forgot_password_token
+      } catch (error) {
+        //_nếu verify thất bại thì throw lỗi để ghi vào cuốn sổ
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.UNAUTHORIZED,
+          message: (error as JsonWebTokenError).message
+        })
+      }
+      //_nếu vượt qua hết thì cho qua lưới lọc
+      return true
+    }
+  }
+}
+
+const nameSchema: ParamSchema = {
+  //_Không được bỏ trống
+  notEmpty: {
+    errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
+  },
+  //_Phải là string
+  isString: {
+    errorMessage: USERS_MESSAGES.NAME_MUST_BE_A_STRING
+  },
+  //_Bỏ những khoảng thừa
+  trim: true,
+  //_Giới hạn độ dài
+  isLength: {
+    options: {
+      min: 1,
+      max: 100
+    },
+    //_Nếu không theo yêu cầu thì chửi
+    errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
+  }
+}
+
+const emailSchema: ParamSchema = {
+  notEmpty: {
+    errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+  },
+  isString: {
+    errorMessage: USERS_MESSAGES.EMAIL_MUST_BE_A_STRING
+  },
+  trim: true,
+  //_ràng buộc kt email để nó tự chửi sẽ hay hơn
+  isEmail: {
+    errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+  }
+}
+
+const dateOfBirthSchema: ParamSchema = {
+  //_Đối với ngày thì phải kiểm tra xem chuẩn string dạng ISO8601 hay không
+  //**Không cần check có bỏ trống hay không. Vì nếu bỏ trống thì schema mình sẽ tự động
+  //lấy ngày hiện tại luôn
+  isISO8601: {
+    options: {
+      strict: true,
+      strictSeparator: true
+    },
+    errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_BE_ISO8601
+  }
+}
+// ------------------------------------------------------------------------------------------
+
 export const registerValidator = validate(
   checkSchema(
     {
       //_Kiểm tra name
-      name: {
-        //_Không được bỏ trống
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
-        },
-        //_Phải là string
-        isString: {
-          errorMessage: USERS_MESSAGES.NAME_MUST_BE_A_STRING
-        },
-        //_Bỏ những khoảng thừa
-        trim: true,
-        //_Giới hạn độ dài
-        isLength: {
-          options: {
-            min: 1,
-            max: 100
-          },
-          //_Nếu không theo yêu cầu thì chửi
-          errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
-        }
-      },
+      name: nameSchema,
       //_Kiểm tra email
-      email: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
-        },
-        isString: {
-          errorMessage: USERS_MESSAGES.EMAIL_MUST_BE_A_STRING
-        },
-        trim: true,
-        //_ràng buộc kt email để nó tự chửi sẽ hay hơn
-        isEmail: {
-          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
-        }
-      },
+      email: emailSchema,
       //_Kiểm tra password:
-      password: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
-        },
-        isString: {
-          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_A_STRING
-        },
-        //_Do dai rang buoc
-        isLength: {
-          options: {
-            min: 8,
-            max: 50
-          },
-          //_Neu khong theo thi chui
-          errorMessage: USERS_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
-        },
-        //_Kiem tra strong password, nó còn có thể cho biết và đánh giá password như thế nào là mạnh
-        isStrongPassword: {
-          options: {
-            minLowercase: 1,
-            minUppercase: 1,
-            minSymbols: 1,
-            minNumbers: 1,
-            minLength: 8
-            // returnScore
-          },
-          //_Neu khong dat thi chui
-          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRONG
-        }
-      },
+      password: passwordSchema,
       //_xac nhan lai password
-      confirm_password: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED
-        },
-        isString: {
-          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING
-        },
-        //_Do dai rang buoc
-        isLength: {
-          options: {
-            min: 8,
-            max: 50
-          },
-          //_Neu khong theo thi chui
-          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
-        },
-        //_Kiem tra strong confirm_password, nó còn có thể cho biết và đánh giá confirm_password như thế nào là mạnh
-        isStrongPassword: {
-          options: {
-            minLowercase: 1,
-            minUppercase: 1,
-            minSymbols: 1,
-            minNumbers: 1,
-            minLength: 8
-            // returnScore
-          },
-          //_Neu khong dat thi chui
-          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRONG
-        },
-        //_Đối với confirm_password thì mình cần kiểm tra thêm có giống password hay chưa
-        //nhưng mình không có hàm đó thì mình phải tự viết bằng cách sử dụng custom
-        //_Sử dụng express-validator sẽ giúp mình giảm thiểu việc phải sử dụng if-else. Tuy nhiên đối với những hàm
-        //quá cá nhân thì cũng phải sử dụng if-else
-        custom: {
-          //_Đây sẽ là hàm kiểm tra xem password và confirm_password có giống nhau hay là không
-          //value: confirm_password và password nằm trong body và nằm trong req, nhưng mình truyền {req} để khi . nó sẽ  hiểu là object và dễ dàng dùng
-          options: (value, { req }) => {
-            //***Kiểm tra nếu mà chúng không giống nhau thì sẽ sẽ tạo ra lỗi và sẽ ném ra
-            //sau đó lỗi sẽ đc lưu trong cuốn nhật kí của checkSchema
-            if (value !== req.body.password) {
-              // throw new ErrorWithStatus({
-              //   status: HTTP_STATUS.UNAUTHORIZED, //401
-              //   message: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD
-              // })
-              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD)
-            } else {
-              return true
-              //nếu mà giống nhau thì sẽ trả ra true, nghĩa là k báo lỗi gì hết
-            }
-          }
-        }
-      },
-      date_of_birth: {
-        //_Đối với ngày thì phải kiểm tra xem chuẩn string dạng ISO8601 hay không
-        //**Không cần check có bỏ trống hay không. Vì nếu bỏ trống thì schema mình sẽ tự động
-        //lấy ngày hiện tại luôn
-        isISO8601: {
-          options: {
-            strict: true,
-            strictSeparator: true
-          },
-          errorMessage: USERS_MESSAGES.DATE_OF_BIRTH_BE_ISO8601
-        }
-      }
+      confirm_password: confirmPasswordScheam,
+      date_of_birth: dateOfBirthSchema
     },
     //việc này giúp cho checkChema biết mà kiểm tra cụ thể vùng nào của req
     ['body']
@@ -176,50 +219,9 @@ export const loginValidator = validate(
   checkSchema(
     {
       //_Kiểm tra email
-      email: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
-        },
-        isString: {
-          errorMessage: USERS_MESSAGES.EMAIL_MUST_BE_A_STRING
-        },
-        trim: true,
-        //_ràng buộc kt email để nó tự chửi sẽ hay hơn
-        isEmail: {
-          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
-        }
-      },
+      email: emailSchema,
       //_Kiểm tra password:
-      password: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.PASSWORD_IS_REQUIRED
-        },
-        isString: {
-          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_A_STRING
-        },
-        //_Do dai rang buoc
-        isLength: {
-          options: {
-            min: 8,
-            max: 50
-          },
-          //_Neu khong theo thi chui
-          errorMessage: USERS_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_8_TO_50
-        },
-        //_Kiem tra strong password, nó còn có thể cho biết và đánh giá password như thế nào là mạnh
-        isStrongPassword: {
-          options: {
-            minLowercase: 1,
-            minUppercase: 1,
-            minSymbols: 1,
-            minNumbers: 1,
-            minLength: 8
-            // returnScore
-          },
-          //_Neu khong dat thi chui
-          errorMessage: USERS_MESSAGES.PASSWORD_MUST_BE_STRONG
-        }
-      }
+      password: { ...passwordSchema, isStrongPassword: undefined }
     },
     ['body']
   )
@@ -361,16 +363,7 @@ export const verifyEmailTokenValidator = validate(
 export const forgotPasswordValidator = validate(
   checkSchema(
     {
-      email: {
-        //_không được để trống
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
-        },
-        isEmail: {
-          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
-        },
-        trim: true
-      }
+      email: emailSchema
     },
     ['body']
   )
@@ -379,35 +372,7 @@ export const forgotPasswordValidator = validate(
 export const forgotPasswordTokenValidator = validate(
   checkSchema(
     {
-      forgot_password_token: {
-        notEmpty: {
-          errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED
-        },
-        //_hàm custom giúp kiểm tra chữ ký có chuẩn hay không
-        custom: {
-          options: async (value: string, { req }) => {
-            // value: forgot_password_token
-            try {
-              //_trong quá trình verify thì có khả năng rớt mạng nên cần bọc vào try-catch để báo lỗi theo ý mình
-              //_nếu thành công thì đc decode
-              const decode_forgot_password_token = await verifyToken({
-                token: value,
-                privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
-              })
-              //_lưu decode vào req để tiện sử dụng dần về sau
-              ;(req as Request).decode_forgot_password_token = decode_forgot_password_token
-            } catch (error) {
-              //_nếu verify thất bại thì throw lỗi để ghi vào cuốn sổ
-              throw new ErrorWithStatus({
-                status: HTTP_STATUS.UNAUTHORIZED,
-                message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
-              })
-            }
-            //_nếu vượt qua hết thì cho qua lưới lọc
-            return true
-          }
-        }
-      }
+      forgot_password_token: forgotPasswordTokenSchema
     },
     ['body']
   )
