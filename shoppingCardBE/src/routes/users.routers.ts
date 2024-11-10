@@ -8,6 +8,7 @@ import {
   logoutController,
   registerController,
   resendEmailVerifyController,
+  resetPasswordController,
   verifyEmailTokenController,
   verifyForgotPasswordTokenController
 } from '~/controllers/users.controllers'
@@ -18,6 +19,7 @@ import {
   loginValidator,
   refreshTokenValidator,
   registerValidator,
+  resetPasswordValidator,
   verifyEmailTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
@@ -104,6 +106,23 @@ userRouter.post(
   '/verify-forgot-password',
   forgotPasswordTokenValidator, // hàm kiểm tra forgot-password-token
   wrapAsync(verifyForgotPasswordTokenController)
+)
+
+/*Desc: Sau khi kiểm tra verify token xong thì fe mới mở giao diện cho người dùng nhập sau đó gói 3 dữ
+kiện đó và bắn cho be kiểm tra và reset password
+    path: users/reset-password
+    method: post,
+    body: {
+        password: string,
+        confirm_password: string,
+        forgot_password_token: string
+    }
+*/
+userRouter.post(
+  '/reset-password', //
+  forgotPasswordTokenValidator, //điểm hay là mình đã có lưới lọc này rồi nên mình sẽ tách nhỏ ra và tận dụng chứ k cần viết lại
+  resetPasswordValidator, //kiểm tra password, confirm_password
+  wrapAsync(resetPasswordController)
 )
 
 export default userRouter

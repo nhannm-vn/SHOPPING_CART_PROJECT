@@ -342,6 +342,27 @@ class UserServices {
     `)
     //thứ em nhận được là đường link đến giao diện đổi mật khẩu
   }
+
+  async resetPassword({
+    user_id, //giúp tìm tới user
+    password
+  }: {
+    user_id: string
+    password: string
+  }) {
+    await databaseServices.users.updateOne(
+      { _id: new ObjectId(user_id) }, //
+      [
+        {
+          $set: {
+            password: hashPassword(password),
+            forgot_password_token: '',
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
+  }
 }
 
 //tạo ra instance rồi export

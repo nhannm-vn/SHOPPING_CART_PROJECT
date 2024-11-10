@@ -4,6 +4,7 @@ import {
   LoginReqBody,
   LogoutReqBody,
   RegisterReqBody,
+  ResetPasswordReqBody,
   TokenPayload,
   VerifyEmailToken,
   VerifyForgotPasswordTokenReqBody
@@ -217,5 +218,31 @@ export const verifyForgotPasswordTokenController = async (
   //và lập tức fe sẽ mở ra giao diện nhập mk mới cho user
   res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS
+  })
+}
+
+export const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Lấy user_id và forgot_password_token để tìm xem user có tồn tại không
+  //**Lưu ý: mình không cần kiểm tra trạng thái verify(business rule) vì mình banned hay unverify mình vẫn cho lấy lại mật khẩu
+  const { user_id } = req.decode_forgot_password_token as TokenPayload
+  const { forgot_password_token, password } = req.body
+  const user = await userServices.checkForgotPasswordToken({
+    user_id, //
+    forgot_password_token
+  })
+
+  //_Sau khi kiểm tra và biết user tồn tại thì reset password
+  await userServices.resetPassword({
+    user_id, //giúp tìm tới user
+    password
+  })
+
+  //_Sau khi update thi thong bao
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
   })
 }
