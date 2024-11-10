@@ -119,6 +119,27 @@ class UserServices {
     return user
   }
 
+  async checkForgotPasswordToken({
+    user_id, //
+    forgot_password_token
+  }: {
+    user_id: string
+    forgot_password_token: string
+  }) {
+    const user = await databaseServices.users.findOne({
+      _id: new ObjectId(user_id),
+      forgot_password_token
+    })
+    //_Nếu không tìm thấy thì báo lỗi luôn. Và lỗi này là mã k chuẩn
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.UNAUTHORIZED,
+        message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID
+      })
+    }
+    return user
+  }
+
   //register sẽ là hàm nhận vào object chứa email và password mà mình rã từ req.body ở bên controller
   //mình sẽ định nghĩa
   async register(payload: RegisterReqBody) {

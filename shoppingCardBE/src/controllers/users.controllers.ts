@@ -5,7 +5,8 @@ import {
   LogoutReqBody,
   RegisterReqBody,
   TokenPayload,
-  VerifyEmailToken
+  VerifyEmailToken,
+  VerifyForgotPasswordTokenReqBody
 } from '~/models/requests/users.request'
 import userServices from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
@@ -199,9 +200,22 @@ export const forgotPasswordController = async (
 }
 
 export const verifyForgotPasswordTokenController = async (
-  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  req: Request<ParamsDictionary, any, VerifyForgotPasswordTokenReqBody>,
   res: Response,
   next: NextFunction
 ) => {
-  //_Lấy user_id v
+  //_Lấy user_id và forgot_password_token để tìm xem user có tồn tại không
+  //**Lưu ý: mình không cần kiểm tra trạng thái verify(business rule) vì mình banned hay unverify mình vẫn cho lấy lại mật khẩu
+  const { user_id } = req.decode_forgot_password_token as TokenPayload
+  const { forgot_password_token } = req.body
+  const user = await userServices.checkForgotPasswordToken({
+    user_id, //
+    forgot_password_token
+  })
+
+  //_Nếu mà tìm thấy thì thông báo cho fe biết là mã chuẩn đét rồi đấy
+  //và lập tức fe sẽ mở ra giao diện nhập mk mới cho user
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS
+  })
 }
