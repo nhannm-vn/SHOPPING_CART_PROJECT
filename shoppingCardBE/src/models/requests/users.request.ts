@@ -4,6 +4,7 @@
 import { JwtPayload } from 'jsonwebtoken'
 import { TokenType } from '~/constants/enums'
 import { ParsedQs } from 'qs'
+import { ParamsDictionary } from 'express-serve-static-core'
 //_Định nghĩa: khi đăng kí register thì bên trong body của request sẽ chứa gì
 
 export interface RegisterReqBody {
@@ -55,4 +56,9 @@ export interface UpdateMeReqBody {
   username?: string // optional
   avatar?: string // optional
   cover_photo?: string // optional
+}
+
+//
+export interface GetProfileReqParams extends ParamsDictionary {
+  username: string
 }

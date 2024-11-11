@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import {
   ForgotPasswordReqBody,
+  GetProfileReqParams,
   LoginReqBody,
   LogoutReqBody,
   RegisterReqBody,
@@ -288,5 +289,19 @@ export const updateMeController = async (
   res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.UPDATE_PROFILE_SUCCESS,
     userInfor
+  })
+}
+
+export const getProfileController = async (
+  req: Request<GetProfileReqParams, any, any>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Vì mình đã định nghĩa nên có thể lấy được
+  const { username } = req.params
+  const result = await userServices.getProfile(username)
+  res.json({
+    message: USERS_MESSAGES.GET_PROFILE_SUCCESS, //message.ts thêm  GET_PROFILE_SUCCESS: 'Get profile success',
+    result
   })
 }

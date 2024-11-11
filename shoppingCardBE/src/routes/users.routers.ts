@@ -5,6 +5,7 @@ import express from 'express'
 import {
   forgotPasswordController,
   getMeController,
+  getProfileController,
   loginController,
   logoutController,
   registerController,
@@ -167,6 +168,14 @@ userRouter.patch(
   updateMeValidator,
   wrapAsync(updateMeController)
 )
+
+/*Desc: ta sẽ tạo chức năng lấy profile bằng username
+    path: users/:username
+    method: get
+    không cần header vì, chưa đăng nhập cũng có thể xem// Nghĩa là không cần accesstoken vẫn có thể xem được
+        do mình đứng ở ngoài và vẫn có thể xem profile của người khác được
+*/
+userRouter.get('/:username', wrapAsync(getProfileController))
 
 export default userRouter
 

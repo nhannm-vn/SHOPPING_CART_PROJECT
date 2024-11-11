@@ -159,6 +159,9 @@ class UserServices {
         _id: new ObjectId(user_id),
         ...payload,
         email_verify_token,
+        //_Mình sẽ thêm username vào để có thể biết mà sử dụng chức năng lấy profile
+        //api/:username để xem thông tin của người đó
+        username: `user${user_id}`,
         date_of_birth: new Date(payload.date_of_birth),
         //mã hóa luôn password trước khi lưu vào database
         password: hashPassword(payload.password)
@@ -443,6 +446,31 @@ class UserServices {
 
     //_Trả thông tin ra cho người dùng
     return userInfor
+  }
+
+  async getProfile(username: string) {
+    //_Tìm user dựa vào username, đồng thời mình sẽ giấu bớt vài thuộc tính nhạy cảm
+    const user = databaseServices.users.findOne(
+      { username }, //
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0,
+          verify: 0,
+          create_at: 0,
+          update_at: 0
+        }
+      }
+    )
+    //_Nếu không tìm thấy thì mình sẽ báo lỗi luôn
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: USERS_MESSAGES.USER_NOT_FOUND
+      })
+    }
+    return user
   }
 }
 
