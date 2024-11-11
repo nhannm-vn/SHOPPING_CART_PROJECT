@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import {
+  ChangePasswordReqBody,
   ForgotPasswordReqBody,
   GetProfileReqParams,
   LoginReqBody,
@@ -292,6 +293,8 @@ export const updateMeController = async (
   })
 }
 
+//_luyện tập trước
+
 export const getProfileController = async (
   req: Request<GetProfileReqParams, any, any>,
   res: Response,
@@ -303,5 +306,22 @@ export const getProfileController = async (
   res.json({
     message: USERS_MESSAGES.GET_PROFILE_SUCCESS, //message.ts thêm  GET_PROFILE_SUCCESS: 'Get profile success',
     result
+  })
+}
+
+export const changePasswordController = async (
+  req: Request<ParamsDictionary, any, ChangePasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_lấy user_id từ decoded_authorization của access_token
+  const { user_id } = req.decode_authorization as TokenPayload
+  //_lấy password và old_password ra
+  const { password, old_password } = req.body
+  //_mình sẽ viết hàm để có thể tìm và update password mới luôn
+  await userServices.changePassword({ user_id, old_password, password })
+  //_Nếu được tới đây thì có nghĩa là thay đổi password thành công thì chỉ cần thông báo là xong
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS
   })
 }

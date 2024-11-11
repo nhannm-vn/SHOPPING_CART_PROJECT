@@ -3,6 +3,7 @@
 //_import đến express để tạo route
 import express from 'express'
 import {
+  changePasswordController,
   forgotPasswordController,
   getMeController,
   getProfileController,
@@ -17,6 +18,7 @@ import {
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
+  changePasswordValidator,
   forgotPasswordTokenValidator,
   forgotPasswordValidator,
   loginValidator,
@@ -174,8 +176,29 @@ userRouter.patch(
     method: get
     không cần header vì, chưa đăng nhập cũng có thể xem// Nghĩa là không cần accesstoken vẫn có thể xem được
         do mình đứng ở ngoài và vẫn có thể xem profile của người khác được
+    *Thường thì gửi dữ liệu bằng param thì họ sẽ gửi userid để tìm kiếm các kiểu
+    *Vì nếu gửi bậy bạ hoặc k gửi thì tìm k thấy nên mình cx k cần chặn
 */
 userRouter.get('/:username', wrapAsync(getProfileController))
+
+/*Desc: ta sẽ tạo chức năng changePassword. Chức năng này cần login vào thì mới cho thay đổi password[access_token]
+    path: '/change-password'
+    method: patch
+    headers: {
+        Authorization: 'Bearer <access_token>'
+    }
+    body: {
+        password: string,
+        old_password: string, 
+        confirm_password: string
+    }
+*/
+userRouter.patch(
+  '/change-password', //
+  accessTokenValidator,
+  changePasswordValidator,
+  wrapAsync(changePasswordController)
+)
 
 export default userRouter
 

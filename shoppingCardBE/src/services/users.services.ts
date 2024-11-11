@@ -448,6 +448,8 @@ class UserServices {
     return userInfor
   }
 
+  //_Luyen tap truoc
+
   async getProfile(username: string) {
     //_Tìm user dựa vào username, đồng thời mình sẽ giấu bớt vài thuộc tính nhạy cảm
     const user = databaseServices.users.findOne(
@@ -471,6 +473,45 @@ class UserServices {
       })
     }
     return user
+  }
+
+  async changePassword({
+    user_id, //
+    old_password,
+    password
+  }: {
+    user_id: string
+    old_password: string
+    password: string
+  }) {
+    const user = await databaseServices.users.findOneAndUpdate(
+      {
+        _id: new ObjectId(user_id), //
+        password: hashPassword(old_password)
+      }, // tìm dựa vào user_id và old_password luôn cho kỹ
+      [
+        {
+          $set: {
+            //_thay doi password
+            password: hashPassword(password),
+            //_nếu mà trường hợp đang reset mật khẩu thì khi change được rồi thì cho mã = '' luôn
+            forgot_password_token: '',
+            updated_at: '$$NOW'
+          }
+        }
+      ],
+      {
+        //_Update trước rồi đã trả ra
+        returnDocument: 'after'
+      }
+    )
+    //_Nếu mà không tìm thấy và k update được thì báo lỗi luôn
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: USERS_MESSAGES.USER_NOT_FOUND
+      })
+    }
   }
 }
 

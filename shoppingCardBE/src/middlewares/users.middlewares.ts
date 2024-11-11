@@ -482,3 +482,17 @@ export const updateMeValidator = validate(
     ['body']
   )
 )
+
+//_luyện tập trước
+export const changePasswordValidator = validate(
+  checkSchema(
+    {
+      old_password: passwordSchema,
+      password: passwordSchema,
+      //_Hai thằng trên xài chung cái check mà k sợ so sánh với confirm_password bởi vì trong thằng đó
+      //có custom mà custom của nó sẽ đi đến cụ thể thằng password trong body truyền lên
+      confirm_password: confirmPasswordScheam
+    },
+    ['body']
+  )
+)

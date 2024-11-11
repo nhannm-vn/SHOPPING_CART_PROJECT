@@ -58,7 +58,13 @@ export interface UpdateMeReqBody {
   cover_photo?: string // optional
 }
 
-//
+//_luyen tap truoc
 export interface GetProfileReqParams extends ParamsDictionary {
   username: string
+}
+
+export interface ChangePasswordReqBody {
+  old_password: string
+  password: string
+  confirm_password: string
 }
