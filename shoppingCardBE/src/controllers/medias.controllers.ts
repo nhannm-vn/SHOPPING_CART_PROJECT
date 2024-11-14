@@ -8,7 +8,7 @@ export const uploadSingleImageController = async (req: Request, res: Response, n
   //_Mình sẽ viết tấm lưới lọc khi người dùng up file lên thì mình sẽ cho nó qua cái lưới lọc đó để gàn buộc định dạng
   const form = formidable({
     maxFiles: 1, //nghiã là chỉ nhận 1 file mỗi lần up thôi
-    maxFileSize: 1024 * 3000, //nghĩa là ràng buộc dung lượng của mỗi file khi gửi lên( 1024: 1kb)
+    maxFileSize: 1024 * 300, //nghĩa là ràng buộc dung lượng của mỗi file khi gửi lên( 1024: 1kb)
     keepExtensions: true, //nghĩa là đuôi của file mà mình sẽ giữ lại. Nên cần check xem có độc không
     //_sau cùng hết rồi thì sẽ chọn file lưu ở đâu
     //_Tuy nhiên sẽ có vấn đề là lỡ trong trường hợp cây thư mục chưa có folder uploads thì nó sẽ bị bug

@@ -5,12 +5,14 @@ import userRouter from './routes/users.routers'
 import databaseServices from './services/database.services'
 import { defaultErrorHanlder } from './middlewares/errors.middlewares'
 import mediaRouter from './routes/medias.routers'
+import { initFolder } from './utils/file'
 
 //_Tạo con PORT dành cho backend
 const PORT = 3000
 
 //_Mở server lên là đồng thời cũng chạy hàm kết nối vs database luôn
 databaseServices.connect()
+initFolder()
 
 //_Dựng server
 const app = express()
