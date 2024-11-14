@@ -16,6 +16,7 @@ import {
   verifyEmailTokenController,
   verifyForgotPasswordTokenController
 } from '~/controllers/users.controllers'
+import { filterMiddleware } from '~/middlewares/common.middlwares'
 import {
   accessTokenValidator,
   changePasswordValidator,
@@ -28,6 +29,7 @@ import {
   updateMeValidator,
   verifyEmailTokenValidator
 } from '~/middlewares/users.middlewares'
+import { UpdateMeReqBody } from '~/models/requests/users.request'
 import { wrapAsync } from '~/utils/handlers'
 
 //_tạo user router
@@ -164,8 +166,23 @@ userRouter.post('/me', accessTokenValidator, wrapAsync(getMeController))
         }
     }
 */
+//_Mình update thì đã khống chế được username chuẩn
+//tuy nhiên mình vẫn chưa có kiến trúc để bắt người ta khi truyền dư
+//==> nên mình sẽ tạo ra một tầng lọc ràng buộc rằng dữ liệu trog req khi truyền lên thì chỉ lấy theo đúng mình thôi
+//còn dư thì bỏ
 userRouter.patch(
   '/me', //
+  //nếu không có tầng lọc này khi user truyền lên dư sẽ dễ bị hack
+  filterMiddleware<UpdateMeReqBody>([
+    'name',
+    'date_of_birth',
+    'bio',
+    'location',
+    'website',
+    'avatar',
+    'username',
+    'cover_photo'
+  ]),
   accessTokenValidator,
   updateMeValidator,
   wrapAsync(updateMeController)
