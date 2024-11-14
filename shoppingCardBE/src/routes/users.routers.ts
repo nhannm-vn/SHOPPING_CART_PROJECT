@@ -9,6 +9,7 @@ import {
   getProfileController,
   loginController,
   logoutController,
+  refreshTokenController,
   registerController,
   resendEmailVerifyController,
   resetPasswordController,
@@ -215,6 +216,20 @@ userRouter.put(
   accessTokenValidator,
   changePasswordValidator,
   wrapAsync(changePasswordController)
+)
+
+/*Desc: refreshtoken
+khi người dùng hết hạn access_token thì sẽ đem refresh_token gửi lên để xin lại access_token mới đồng thời cũng tạo refresh_token mới và lưu vào databse
+    method: post [vì mình gửi lên là k cập nhật mà xóa cái cũ và thay cái mới luôn]
+    path: users/refresh-token
+    body: {
+        refresh_token: string
+    }
+*/
+userRouter.post(
+  '/refresh-token', //
+  refreshTokenValidator,
+  wrapAsync(refreshTokenController)
 )
 
 export default userRouter

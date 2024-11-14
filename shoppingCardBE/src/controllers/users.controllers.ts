@@ -5,6 +5,7 @@ import {
   GetProfileReqParams,
   LoginReqBody,
   LogoutReqBody,
+  RefreshTokenReqBody,
   RegisterReqBody,
   ResetPasswordReqBody,
   TokenPayload,
@@ -328,5 +329,25 @@ export const changePasswordController = async (
   //_Nếu được tới đây thì có nghĩa là thay đổi password thành công thì chỉ cần thông báo là xong
   res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS
+  })
+}
+
+export const refreshTokenController = async (
+  req: Request<ParamsDictionary, any, RefreshTokenReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  //_Đầu tiên cần lấy user_id và refreshToken phục vụ cho check xem user đó có tồn tại không
+  const { user_id } = req.decode_refresh_token as TokenPayload
+  const { refresh_token } = req.body
+  //_Kiểm tra xem user có tồn tại hay không. Nếu không tồn tại thì báo lỗi luôn rồi
+  await userServices.checkRefreshToken({ user_id, refresh_token })
+  //_Nếu ổn và tồn tại thì viết hàm tạo refresh_token và access_token
+  //_Mình cần truyền vào user_id để ký ra token và refresh_token để tìm và xóa token cũ
+  const result = await userServices.refreshToken({ user_id, refresh_token })
+  //_Thong bao va dua token cho ho su dung luon
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,
+    result
   })
 }

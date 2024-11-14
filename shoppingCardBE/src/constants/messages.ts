@@ -58,6 +58,8 @@ export const USERS_MESSAGES = {
   UPDATE_PROFILE_SUCCESS: 'Update profile success',
   USER_NOT_VERIFIED: 'User not verified',
   USERNAME_ALREADY_EXISTS: 'Username already exists',
-  USERNAME_IS_INVALID: 'Username is invalid',
-  CHANGE_PASSWORD_SUCCESS: 'Change password successfully'
+  CHANGE_PASSWORD_SUCCESS: 'Change password successfully',
+  USERNAME_IS_INVALID:
+    'Username must be a string and length must be 4 - 15, and contain only letters, numbers, and underscores, not only numbers',
+  REFRESH_TOKEN_SUCCESS: 'Refresh token successfully'
 } as const
