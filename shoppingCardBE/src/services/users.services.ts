@@ -156,12 +156,12 @@ class UserServices {
     await databaseServices.users.insertOne(
       new User({
         //_Vì user_id mình tự tạo nên mình sẽ update vào lúc register luôn
-        _id: new ObjectId(user_id),
+        _id: user_id,
         ...payload,
         email_verify_token,
-        //_Mình sẽ thêm username vào để có thể biết mà sử dụng chức năng lấy profile
-        //api/:username để xem thông tin của người đó
-        username: `user${user_id}`,
+        //_Mỗi lần mà đk 1 tk thì tạo ra 1 userName k trùng trên toàn hệ thống
+        //để tiện cho việc tìm kiếm
+        username: `user${user_id.toString()}`,
         date_of_birth: new Date(payload.date_of_birth),
         //mã hóa luôn password trước khi lưu vào database
         password: hashPassword(payload.password)
