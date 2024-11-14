@@ -9,6 +9,7 @@ import { validate } from '~/utils/validation'
 import dotenv from 'dotenv'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize, values } from 'lodash'
+import { REGEX_USERNAME } from '~/constants/regex'
 dotenv.config()
 
 //_middleware thực chất cũng chỉ là function
@@ -474,6 +475,19 @@ export const updateMeValidator = validate(
             max: 50
           },
           errorMessage: USERS_MESSAGES.USERNAME_LENGTH_MUST_BE_LESS_THAN_50 //messages.ts thêm USERNAME_LENGTH_MUST_BE_LESS_THAN_50: 'Username length must be less than 50'
+        },
+        //_mình phải có thêm hàm kiểm tra xem cái username có đúng định dạng không
+        //vì đối với username thì nó cần dựa vào đó để tìm kiếm. Và việc tìm kiếm thì k nên để các đường link có dấu space hoặc ký tự đặc biệt
+        custom: {
+          options: (value: string, { req }) => {
+            //_Mình sẽ cần dùng regex để ngăn chặn
+            if (!REGEX_USERNAME.test(value)) {
+              //Vì lỗi này sẽ là lỗi truyền bậy bạ thôi nên mình sẽ cho nó chung là 422. Mà nằm trong checkSchemas nên chỉ cần throw thôi
+              throw new Error(USERS_MESSAGES.USERNAME_IS_INVALID)
+            }
+            //nếu mà match với regex rồi thì cho qua
+            return true
+          }
         }
       },
       avatar: imageSchema,
