@@ -200,17 +200,17 @@ userRouter.get('/:username', wrapAsync(getProfileController))
 
 /*Desc: ta sẽ tạo chức năng changePassword. Chức năng này cần login vào thì mới cho thay đổi password[access_token]
     path: '/change-password'
-    method: patch
+    method: put
     headers: {
         Authorization: 'Bearer <access_token>'
     }
     body: {
-        password: string,
         old_password: string, 
+        password: string,
         confirm_password: string
     }
 */
-userRouter.patch(
+userRouter.put(
   '/change-password', //
   accessTokenValidator,
   changePasswordValidator,

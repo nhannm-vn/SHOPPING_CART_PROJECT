@@ -314,12 +314,17 @@ export const changePasswordController = async (
   res: Response,
   next: NextFunction
 ) => {
-  //_lấy user_id từ decoded_authorization của access_token
+  //_Kiểm tra xem từ user_id và old_password thì mình có tìm được user nào không
+  //nếu có thì mình sẽ tiến hành thay đổi password luôn, còn không có thì báo lỗi
   const { user_id } = req.decode_authorization as TokenPayload
   //_lấy password và old_password ra
   const { password, old_password } = req.body
   //_mình sẽ viết hàm để có thể tìm và update password mới luôn
-  await userServices.changePassword({ user_id, old_password, password })
+  await userServices.changePassword({
+    user_id, //
+    old_password,
+    password
+  })
   //_Nếu được tới đây thì có nghĩa là thay đổi password thành công thì chỉ cần thông báo là xong
   res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS

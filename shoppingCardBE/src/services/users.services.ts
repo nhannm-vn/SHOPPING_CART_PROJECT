@@ -484,34 +484,32 @@ class UserServices {
     old_password: string
     password: string
   }) {
-    const user = await databaseServices.users.findOneAndUpdate(
-      {
-        _id: new ObjectId(user_id), //
-        password: hashPassword(old_password)
-      }, // tìm dựa vào user_id và old_password luôn cho kỹ
-      [
-        {
-          $set: {
-            //_thay doi password
-            password: hashPassword(password),
-            //_nếu mà trường hợp đang reset mật khẩu thì khi change được rồi thì cho mã = '' luôn
-            forgot_password_token: '',
-            updated_at: '$$NOW'
-          }
-        }
-      ],
-      {
-        //_Update trước rồi đã trả ra
-        returnDocument: 'after'
-      }
-    )
-    //_Nếu mà không tìm thấy và k update được thì báo lỗi luôn
+    //_Tìm thử xem có user nàm không dựa vào user_id và old_password
+    const user = await databaseServices.users.findOne({
+      _id: new ObjectId(user_id),
+      password: hashPassword(old_password)
+    })
+
+    //_Nếu mà tìm không thấy nghĩa là người dùng nhập sai password. Nghĩa là k có quyền sở hữu account
     if (!user) {
       throw new ErrorWithStatus({
-        status: HTTP_STATUS.NOT_FOUND,
+        status: HTTP_STATUS.UNAUTHORIZED,
         message: USERS_MESSAGES.USER_NOT_FOUND
       })
     }
+
+    //_Nếu mà vượt qua nghĩa là tìm thấy. Mà tìm thấy thì mình sẽ tiến hành thay đổi pass cho nó
+    await databaseServices.users.updateOne(
+      { _id: new ObjectId(user_id) }, //
+      [
+        {
+          $set: {
+            password: hashPassword(password),
+            updated_at: '$$NOW'
+          }
+        }
+      ]
+    )
   }
 }
 
