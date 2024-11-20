@@ -6,6 +6,7 @@ import databaseServices from './services/database.services'
 import { defaultErrorHanlder } from './middlewares/errors.middlewares'
 import mediaRouter from './routes/medias.routers'
 import { initFolder } from './utils/file'
+import staticRouter from './routes/static.routers'
 
 //_Tạo con PORT dành cho backend
 const PORT = 3000
@@ -26,6 +27,8 @@ app.use('/users', userRouter)
 
 //_Sử dụng mediaRouter
 app.use('/medias', mediaRouter)
+
+app.use('/static', staticRouter) //serving: chia sẻ
 
 //_hàm này sẽ chạy cuối cùng và sẽ giúp bắt tất cả các lỗi
 app.use(defaultErrorHanlder)
