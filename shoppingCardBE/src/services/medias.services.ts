@@ -15,14 +15,14 @@ class MediasServices {
     //nên mình duyệt forEach. Tuy nhiên cần nén ảnh trước khi biến thành link vả lưu
     //nên mình cần duyệt theo kiểu mảng mạnh ai chạy k thôi nó sẽ khó load
     const result = await Promise.all(
-      files.map((file) => {
+      files.map(async (file) => {
         //_Trước khi lưu cần độ lại tên file
         const newFilename = getNameFromFullnameFile(file.newFilename) + '.jpg'
         //_Tạo nơi sẽ lưu file sau khi mình nén
         const newPath = UPLOAD_IMAGE_DIR + '/' + newFilename
 
         //_Sau khi tải lên thì gọi sharp để xư lí ảnh
-        const infor = sharp(file.filepath).jpeg().toFile(newPath)
+        const infor = await sharp(file.filepath).jpeg().toFile(newPath)
 
         //_Xóa các tấm hình trong thư mực tạm
         fs.unlinkSync(file.filepath)

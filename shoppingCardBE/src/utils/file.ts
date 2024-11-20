@@ -60,7 +60,7 @@ export const handleUploadImage = (req: Request) => {
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err)
       //_Nếu k có gửi ảnh lên thì chửi luôn
-      if (!files) return reject(new Error('Image is empty'))
+      if (!files.image) return reject(new Error('Image is empty'))
       //_Nếu vượt qua tất cả thì trả ra file
       return resolve(files.image as File[])
     })
