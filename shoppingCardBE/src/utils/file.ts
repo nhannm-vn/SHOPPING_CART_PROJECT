@@ -73,7 +73,7 @@ export const handleUploadVideo = (req: Request) => {
     //_Đường dẫn lưu các file khi đã vượt qua lưới
     //_Lưu vào file tạm rồi còn nén xong mới lưu vào file chính
     uploadDir: UPLOAD_VIDEO_DIR,
-    maxFiles: 4, //_Lưu tối đa là 4 file một lần tải lên
+    maxFiles: 1, //_Lưu tối đa là 4 file một lần tải lên
     maxFileSize: 50 * 1024 * 1024, //_Mỗi file có dung lượng tối đa là 50mb
     keepExtensions: true, //_giữ lại đuôi của file
     filter: ({ name, originalFilename, mimetype }) => {
