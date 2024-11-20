@@ -2,7 +2,7 @@ import { Request } from 'express'
 import sharp from 'sharp'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import fs from 'fs'
-import { getNameFromFullnameFile, handleUploadImage } from '~/utils/file'
+import { getNameFromFullnameFile, handleUploadImage, handleUploadVideo } from '~/utils/file'
 import { Media } from '~/models/Other'
 import { MediaType } from '~/constants/enums'
 //_Đây chỉ đơn giảng là file lưu các dịch vụ của media thôi. Chứ k có đụng chạm gì tới lưu trữ
@@ -37,6 +37,21 @@ class MediasServices {
       })
     )
     return result //quăng ra các cái link ảnh
+  }
+  //
+  async handleUploadVideo(req: Request) {
+    const files = await handleUploadVideo(req)
+    const result = await Promise.all(
+      files.map(async (file) => {
+        //setup một link ảnh cho ngta gửi cho bạn bè coi
+        const urlVideo: Media = {
+          url: `http://localhost:3000/static/video/${file.newFilename}`, //
+          type: MediaType.Video
+        }
+        return urlVideo
+      })
+    )
+    return result
   }
 }
 

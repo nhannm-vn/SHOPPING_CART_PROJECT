@@ -16,6 +16,17 @@ export const uploadImageController = async (req: Request, res: Response, next: N
     urlImage
   })
 }
+
+export const uploadVideoController = async (req: Request, res: Response, next: NextFunction) => {
+  //_Lay ra link video
+  const urlVideo = await mediasServices.handleUploadVideo(req)
+
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.UPLOAD_FILE_SUCCESS,
+    urlVideo
+  })
+}
+
 /*
     __formidable là một thư viện Node.js phổ biến dùng để xử lý 
     các form HTML và tải lên tệp (file upload) từ các biểu mẫu.
