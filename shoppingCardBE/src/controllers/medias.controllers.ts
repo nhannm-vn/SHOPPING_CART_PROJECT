@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express'
 import formidable from 'formidable'
 import path from 'path'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { USERS_MESSAGES } from '~/constants/messages'
 import mediasServices from '~/services/medias.services'
 
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
@@ -10,6 +11,10 @@ export const uploadImageController = async (req: Request, res: Response, next: N
   const urlImage = await mediasServices.handleUploadImage(req)
 
   //_Thông báo và trả ra
+  res.status(HTTP_STATUS.OK).json({
+    message: USERS_MESSAGES.UPLOAD_FILE_SUCCESS,
+    urlImage
+  })
 }
 /*
     __formidable là một thư viện Node.js phổ biến dùng để xử lý 
