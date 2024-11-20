@@ -27,6 +27,25 @@ export const initFolder = () => {
 export const handleUploadImage = (req: Request) => {
   //_chuẩn bị lưới lọc formidable
   const form = formidable({
-    //_Đường dẫn lưu các file
+    //_Đường dẫn lưu các file khi đã vượt qua lưới
+    //_Lưu vào file tạm rồi còn nén xong mới lưu vào file chính
+    uploadDir: UPLOAD_IMAGE_TEMP_DIR,
+    maxFiles: 4, //_Lưu tối đa là 4 file một lần tải lên
+    maxFileSize: 300 * 1024, //_Mỗi file có dung lượng tối đa là 300kb
+    maxTotalFileSize: 300 * 1024 * 1024, //_total các file khi up lên hết thì có tổng dung lượng là
+    keepExtensions: true, //_giữ lại đuôi của file
+    filter: ({ name, originalFilename, mimetype }) => {
+      //_Mình chirt true khi nó đúng là được gửi bằng image
+      //+name: tên của field đang chứa file
+      //+originalFilename: tên gốc ban đầu của các file
+      //+mimetype: kiểu của file được up lên 'video/mkv', 'image/png'
+      const valid = name == 'image' && Boolean(mimetype?.includes('image'))
+      if (!valid) {
+        //tao ra loi
+        form.emit('error' as any, new Error('File type is not valid') as any)
+      }
+      //_Nếu valid thì trả ra true
+      return valid
+    }
   })
 }
