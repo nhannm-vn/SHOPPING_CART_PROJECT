@@ -6,6 +6,7 @@ import path from 'path'
 import { Request } from 'express'
 import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import formidable from 'formidable'
+import { File } from 'formidable'
 
 export const initFolder = () => {
   //_Lúc bắt đầu chạy dự án thì hãy tạo dùm cho thư mục để lưu upload đi
@@ -44,8 +45,33 @@ export const handleUploadImage = (req: Request) => {
         //tao ra loi
         form.emit('error' as any, new Error('File type is not valid') as any)
       }
-      //_Nếu valid thì trả ra true
+      //_Nếu valid nghĩa là true thì cho qua
       return valid
     }
   })
+
+  //_Sử dụng cái màng lọc
+  //LƯU Ý: những cái hàm mà nó nhận thêm callback thì nó sẽ k có xu hướng đợi và nó sẽ có thể bị bất đồng bộ
+  //nên cái hàm sẽ chạy sau trước khi ném ra files và nó cực giống như verify và signToken
+  //==> mình sẽ quy nó về promise. Nghĩa là ép tụi nó xử lí xong thì mình mới đi tiếp
+  //==> trả ra return bên kia gọi thì được cái promise
+  return new Promise<File[]>((resolve, reject) => {
+    //_Lưới lọc sẽ lọc request
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err)
+      //_Nếu k có gửi ảnh lên thì chửi luôn
+      if (!files) return reject(new Error('Image is empty'))
+      //_Nếu vượt qua tất cả thì trả ra file
+      return resolve(files.image as File[])
+    })
+  })
+}
+
+//_Hàm chỉnh đuôi file ảnh sau khi nén xong
+//getNameFromFullnameFile: hàm nhận vào full tên và trả ra asd bỏ đuôi
+export const getNameFromFullnameFile = (filename: string) => {
+  const nameArr = filename.split('.')
+  //_Mình có nhiều lựa chọn để chơi, tuy nhiên mình nên xài pop
+  nameArr.pop()
+  return nameArr.join('-')
 }
