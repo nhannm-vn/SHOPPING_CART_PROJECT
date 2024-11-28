@@ -22,3 +22,9 @@ export enum MediaType {
   Image,
   Video
 }
+
+// enums of product
+export enum PRODUCT_STATUS {
+  Active,
+  Stock
+}
