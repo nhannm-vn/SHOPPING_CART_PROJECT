@@ -5,6 +5,10 @@ import fs from 'fs'
 import { getNameFromFullnameFile, handleUploadImage, handleUploadVideo } from '~/utils/file'
 import { Media } from '~/models/Other'
 import { MediaType } from '~/constants/enums'
+import { isProduction } from '~/constants/config'
+import dotenv from 'dotenv'
+dotenv.config()
+
 //_Đây chỉ đơn giảng là file lưu các dịch vụ của media thôi. Chứ k có đụng chạm gì tới lưu trữ
 class MediasServices {
   async handleUploadImage(req: Request) {
@@ -30,7 +34,9 @@ class MediasServices {
 
         //_setup một link ảnh và gửi cho người ta
         const urlImage: Media = {
-          url: `http://localhost:3000/static/image/${newFilename}`, //
+          url: isProduction
+            ? `${process.env.HOST}/static/image/${newFilename}`
+            : `http://localhost:${process.env.POST}/static/image/${newFilename}`,
           type: MediaType.Image
         }
         return urlImage
@@ -45,7 +51,9 @@ class MediasServices {
       files.map(async (file) => {
         //setup một link ảnh cho ngta gửi cho bạn bè coi
         const urlVideo: Media = {
-          url: `http://localhost:3000/static/video/${file.newFilename}`, //
+          url: isProduction
+            ? `${process.env.HOST}/static/video/${file.newFilename}`
+            : `http://localhost:${process.env.POST}/static/video/${file.newFilename}`,
           type: MediaType.Video
         }
         return urlVideo
