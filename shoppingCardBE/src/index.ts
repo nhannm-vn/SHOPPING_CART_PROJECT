@@ -14,7 +14,15 @@ dotenv.config()
 const PORT = process.env.POST || 3000
 
 //_Mở server lên là đồng thời cũng chạy hàm kết nối vs database luôn
-databaseServices.connect()
+//sau đó khi kết nối thì tạo các index luôn
+databaseServices.connect().then(() => {
+  //_Nghĩa là sau khi connect với databse thì nó sẽ chạy hàm tạo index
+  //_Yên tâm là khi nó có tạo key rồi thì nó sẽ không tạo lại nữa. Còn nếu chưa có thì sẽ tạo
+  databaseServices.indexUsers()
+  databaseServices.indexRefreshToken()
+})
+
+//_Chạy server thì tạo các folder này
 initFolder()
 
 //_Dựng server
