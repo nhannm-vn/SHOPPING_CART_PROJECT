@@ -61,6 +61,34 @@ class DatabaseServices {
   get refresh_tokens(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string)
   }
+
+  //_Tạo index theo hướng firscode nghĩa là viết code ở đây để tạo trên db
+  //_Các index này giúp tăng performace trên mongo
+  //_Để và để tăng thêm hiệu suất nữa thì mình cần kiểm tra xem
+  //các index có tồn tại chưa. Nếu chưa tồn tại thì đã tạo mới mỗi khi chạy server
+  async indexUsers() {
+    //check
+    const exists = await this.users.indexExists(['_id_', 'username_1', 'email_1', 'email_1_password_1'])
+    if (!exists) {
+      //_username cũng như _id cũng là unique
+      await this.users.createIndex({ username: 1 }, { unique: true })
+      //_email cung nhu _email cung la unique
+      await this.users.createIndex({ email: 1 }, { unique: true })
+      //_và key component vì nga có xu hướng tìm 1 cập
+      await this.users.createIndex({ email: 1, password: 1 })
+    }
+  }
+
+  //_Tạo index cho refresh token
+  async indexRefreshToken() {
+    const exists = await this.refresh_tokens.indexExists(['_id_', 'token_1', 'exp_1'])
+    if (!exists) {
+      await this.refresh_tokens.createIndex({ token: 1 }, { unique: true })
+      //TTL index tự động rà soát và xóa những thằng document hết hạn
+      //đây là công nghệ mới thay thế cho cron job
+      await this.refresh_tokens.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+    }
+  }
 }
 //_Tạo ra instance rồi export
 const databaseServices = new DatabaseServices()
