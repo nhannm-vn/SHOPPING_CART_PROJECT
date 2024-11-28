@@ -5,7 +5,7 @@ import User from '~/models/schemas/User.schema'
 import databaseServices from './database.services'
 import { LoginReqBody, RegisterReqBody, UpdateMeReqBody } from '~/models/requests/users.request'
 import { hashPassword } from '~/utils/crypto'
-import { signToken } from '~/utils/jwt'
+import { signToken, verifyToken } from '~/utils/jwt'
 import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -34,12 +34,23 @@ class UserServices {
     })
   }
 
-  private signRefreshToken = (user_id: string) => {
-    return signToken({
-      payload: { user_id, token_type: TokenType.RefreshToken },
-      privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
-      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
-    })
+  //_Mình sẽ truyền thêm exp nhằm khi refresh token thì sẽ xóa
+  //và tạo ra token mới có ngày hết hạn trùng với thằng cũ. Nếu không thì nó
+  //sẽ lặp đi lặp lại hoài
+  private signRefreshToken = (user_id: string, exp?: number) => {
+    //_Nếu truyền lên exp thì sẽ tạo cái token có exp theo thằng cũ. Nếu không có nghĩa là token hoàn toàn mới thì sẽ quy định theo expireIn
+    if (exp) {
+      return signToken({
+        payload: { user_id, token_type: TokenType.RefreshToken, exp },
+        privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+      })
+    } else {
+      return signToken({
+        payload: { user_id, token_type: TokenType.RefreshToken },
+        privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
+        options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
+      })
+    }
   }
 
   //_hàm ký ra email_verify_token
@@ -57,6 +68,18 @@ class UserServices {
       payload: { user_id, token_type: TokenType.ForgotPasswordToken },
       privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
       options: { expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRE_IN }
+    })
+  }
+
+  //_flow là mình thêm iat và exp vào ràng buộc obj
+  //chính vì vậy trước khi lưu vào databse ta cần lấy ra được
+  //iat và exp thì mới có cái lưu vào được. Mà tụi nó nằm trong token
+  //cụ thể là vùng payload nên cần verify ra để lấy
+  //mình viết thêm cái hàm cho đẹp thôi chứ thật ra là đang bọc lại hàm khác
+  private decodeRefreshToken(refresh_token: string) {
+    return verifyToken({
+      token: refresh_token,
+      privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
     })
   }
 
@@ -184,12 +207,17 @@ class UserServices {
       this.signRefreshToken(user_id.toString())
     ])
 
+    //_Minh verify để lấy iat và exp để lưu vào collection
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
+
     //_trước khi trả 2 cái mã ra thì lưu rf vào collection
 
     await databaseServices.refresh_tokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_token as string
+        token: refresh_token as string,
+        iat,
+        exp
       })
     )
 
@@ -246,12 +274,17 @@ class UserServices {
       this.signRefreshToken(user_id)
     ])
 
+    //_Sau đó mình sẽ verify để lấy iat và exp để lưu vào collection
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
+
     //_trước khi trả 2 cái mã ra thì lưu rf vào collection
 
     await databaseServices.refresh_tokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_token as string
+        token: refresh_token as string,
+        iat,
+        exp
       })
     )
 
@@ -286,11 +319,16 @@ class UserServices {
       this.signRefreshToken(user_id)
     ])
 
+    //_Minh verify để lấy iat và exp để lưu vào collection
+    const { iat, exp } = await this.decodeRefreshToken(refresh_token)
+
     //thêm refresh token vào collection
     await databaseServices.refresh_tokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: refresh_token as string
+        token: refresh_token as string,
+        iat,
+        exp
       })
     )
     return {
@@ -514,15 +552,18 @@ class UserServices {
 
   async refreshToken({
     user_id, //
-    refresh_token
+    refresh_token,
+    exp
   }: {
     user_id: string
     refresh_token: string
+    exp: number
   }) {
     //_Ký ra access và refresh mới
     const [access_token, new_refresh_token] = await Promise.all([
       this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
+      //**Đặc biệt là ký cho chức năng này thì cần exp cũ. Chứ nếu lấy cái mới nữa thì xài tới khi nào
+      this.signRefreshToken(user_id, exp)
     ])
 
     //_Tìm và xóa refresh token cũ
@@ -530,11 +571,16 @@ class UserServices {
       token: refresh_token
     })
 
+    //_đối với thằng này thì chỉ cần iat thôi còn exp thì lấy param truyền vào
+    const { iat } = await this.decodeRefreshToken(refresh_token)
+
     //_Lưu refresh_token mới vào database
     await databaseServices.refresh_tokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
-        token: new_refresh_token
+        token: new_refresh_token,
+        iat,
+        exp //sẽ lấy exp của thằng cũ luôn chứ k cần decode gì cả
       })
     )
 

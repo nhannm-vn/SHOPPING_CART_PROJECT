@@ -338,13 +338,17 @@ export const refreshTokenController = async (
   next: NextFunction
 ) => {
   //_Đầu tiên cần lấy user_id và refreshToken phục vụ cho check xem user đó có tồn tại không
-  const { user_id } = req.decode_refresh_token as TokenPayload
+  //_TokenPayload là sẽ chứa những thông tin khi mà mình đecode ra
+  //lúc này mình sẽ lấy thêm exp ngày hết hạn để khi refresh token thì
+  //sẽ tạo ra cái mã mới có exp trùng mã cũ. Mà exp nằm ngay bên trong decode
+  //_chính gì vậy mà mình sẽ móc giá trị được lưu trong decode khi verify và trong đó có iat và exp
+  const { user_id, exp } = req.decode_refresh_token as TokenPayload
   const { refresh_token } = req.body
   //_Kiểm tra xem user có tồn tại hay không. Nếu không tồn tại thì báo lỗi luôn rồi
   await userServices.checkRefreshToken({ user_id, refresh_token })
   //_Nếu ổn và tồn tại thì viết hàm tạo refresh_token và access_token
   //_Mình cần truyền vào user_id để ký ra token và refresh_token để tìm và xóa token cũ
-  const result = await userServices.refreshToken({ user_id, refresh_token })
+  const result = await userServices.refreshToken({ user_id, refresh_token, exp })
   //_Thong bao va dua token cho ho su dung luon
   res.status(HTTP_STATUS.OK).json({
     message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,

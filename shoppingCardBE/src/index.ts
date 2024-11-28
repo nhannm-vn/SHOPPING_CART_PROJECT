@@ -7,9 +7,11 @@ import { defaultErrorHanlder } from './middlewares/errors.middlewares'
 import mediaRouter from './routes/medias.routers'
 import { initFolder } from './utils/file'
 import staticRouter from './routes/static.routers'
+import dotenv from 'dotenv'
+dotenv.config()
 
 //_Tạo con PORT dành cho backend
-const PORT = 3000
+const PORT = process.env.POST || 3000
 
 //_Mở server lên là đồng thời cũng chạy hàm kết nối vs database luôn
 databaseServices.connect()
