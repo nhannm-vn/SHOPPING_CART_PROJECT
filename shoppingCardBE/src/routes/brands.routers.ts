@@ -1,4 +1,5 @@
 import express from 'express'
+import { createBrandController } from '~/controllers/brands.controllers'
 import { createBrandValidator } from '~/middlewares/brands.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
