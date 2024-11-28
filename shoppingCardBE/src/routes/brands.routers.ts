@@ -1,4 +1,7 @@
 import express from 'express'
+import { createBrandValidator } from '~/middlewares/brands.middlewares'
+import { accessTokenValidator } from '~/middlewares/users.middlewares'
+import { wrapAsync } from '~/utils/handlers'
 
 //_tạo router
 const brandRouter = express.Router()
@@ -19,5 +22,11 @@ const brandRouter = express.Router()
  * }
  *
  */
+brandRouter.post(
+  '/',
+  accessTokenValidator, //
+  createBrandValidator,
+  wrapAsync(createBrandController)
+)
 
 export default brandRouter
