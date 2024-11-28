@@ -12,6 +12,9 @@ dotenv.config()
 
 //_fix về es_module cho hợp lệ ts
 import { Collection, Db, MongoClient } from 'mongodb'
+import Brand from '~/models/schemas/Brand.schema'
+import Category from '~/models/schemas/Category.schema'
+import Product from '~/models/schemas/Product.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@shoppingcardprojectclus.t8nte.mongodb.net/?retryWrites=true&w=majority&appName=shoppingCardProjectClusterAgain`
@@ -60,6 +63,18 @@ class DatabaseServices {
   //hàm giúp mình connect đi vào collection chuyên chứa các refresh_token
   get refresh_tokens(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string)
+  }
+
+  get brands(): Collection<Brand> {
+    return this.db.collection(process.env.DB_BRANDS_COLLECTION as string)
+  }
+
+  get categories(): Collection<Category> {
+    return this.db.collection(process.env.DB_CATEGORY_COLLECTION as string)
+  }
+
+  get products(): Collection<Product> {
+    return this.db.collection(process.env.DB_PRODUCTS_COLLECTION as string)
   }
 
   //_Tạo index theo hướng firscode nghĩa là viết code ở đây để tạo trên db
