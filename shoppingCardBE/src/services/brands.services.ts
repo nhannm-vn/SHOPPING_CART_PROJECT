@@ -21,6 +21,13 @@ class BrandsServices {
     )
     return brandInserted
   }
+
+  async getBrandById(id: string) {
+    const brand = await databaseServices.brands.findOne({
+      _id: new ObjectId(id)
+    })
+    return brand
+  }
 }
 
 const brandsServices = new BrandsServices()

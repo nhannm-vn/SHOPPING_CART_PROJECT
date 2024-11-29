@@ -3,7 +3,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { BRANDS_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
-import { CreateBrandReqBody } from '~/models/requests/brands.request'
+import { CreateBrandReqBody, GetBrandReqParams } from '~/models/requests/brands.request'
 import { TokenPayload } from '~/models/requests/users.request'
 import brandsServices from '~/services/brands.services'
 
@@ -33,6 +33,28 @@ export const createBrandController = async (
   //_thong bao
   res.status(HTTP_STATUS.CREATED).json({
     message: BRANDS_MESSAGES.CREATE_BRAND_SUCCESS,
+    result: brand
+  })
+}
+
+export const getBrandByIdController = async (
+  req: Request<GetBrandReqParams, any, any>, //
+  res: Response,
+  next: NextFunction
+) => {
+  //_Lấy id
+  const { id } = req.params
+  const brand = await brandsServices.getBrandById(id)
+
+  if (!brand) {
+    throw new ErrorWithStatus({
+      status: HTTP_STATUS.NOT_FOUND,
+      message: BRANDS_MESSAGES.BRAND_NOT_FOUND
+    })
+  }
+
+  res.status(HTTP_STATUS.OK).json({
+    message: BRANDS_MESSAGES.GET_BRANDS_SUCCESS,
     result: brand
   })
 }

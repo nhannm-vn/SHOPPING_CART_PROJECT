@@ -1,6 +1,6 @@
 import express from 'express'
-import { createBrandController } from '~/controllers/brands.controllers'
-import { createBrandValidator } from '~/middlewares/brands.middlewares'
+import { createBrandController, getBrandByIdController } from '~/controllers/brands.controllers'
+import { createBrandValidator, idMongoParamValidator } from '~/middlewares/brands.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
 
@@ -28,6 +28,19 @@ brandRouter.post(
   accessTokenValidator, //
   createBrandValidator,
   wrapAsync(createBrandController)
+)
+
+/**
+ * desc: get infor by id
+ * method: GET
+ * path: /brands/:id
+ * _không cần header vì chưa đăng nhập vẫn cho coi
+ */
+//_truyền lên id cho mình và mình sẽ tìm
+brandRouter.get(
+  '/:id', //
+  idMongoParamValidator,
+  wrapAsync(getBrandByIdController)
 )
 
 export default brandRouter
