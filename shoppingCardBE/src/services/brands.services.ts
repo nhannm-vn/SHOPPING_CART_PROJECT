@@ -28,6 +28,12 @@ class BrandsServices {
     })
     return brand
   }
+
+  async getAllBrands() {
+    //_Lưu ý: nếu k có toArray() thì kq trả ra rất ghê
+    const brands = await databaseServices.brands.find().toArray()
+    return brands
+  }
 }
 
 const brandsServices = new BrandsServices()

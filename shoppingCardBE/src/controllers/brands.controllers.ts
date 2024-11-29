@@ -58,3 +58,15 @@ export const getBrandByIdController = async (
     result: brand
   })
 }
+
+export const getAllBrandsController = async (
+  req: Request, //
+  res: Response,
+  next: NextFunction
+) => {
+  const brands = await brandsServices.getAllBrands()
+  res.status(HTTP_STATUS.OK).json({
+    message: BRANDS_MESSAGES.GET_BRANDS_SUCCESS,
+    result: brands
+  })
+}

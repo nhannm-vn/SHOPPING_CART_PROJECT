@@ -1,5 +1,5 @@
 import express from 'express'
-import { createBrandController, getBrandByIdController } from '~/controllers/brands.controllers'
+import { createBrandController, getAllBrandsController, getBrandByIdController } from '~/controllers/brands.controllers'
 import { createBrandValidator, idMongoParamValidator } from '~/middlewares/brands.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
@@ -42,5 +42,13 @@ brandRouter.get(
   idMongoParamValidator,
   wrapAsync(getBrandByIdController)
 )
+
+/**
+ * desc: get all brands
+ * method: GET
+ * path: /brands
+ */
+//path vẫn là brands nhưng nếu post thì thêm còn get thì lấy all brand
+brandRouter.get('/', wrapAsync(getAllBrandsController))
 
 export default brandRouter
