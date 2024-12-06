@@ -1,5 +1,9 @@
 import express from 'express'
-import { createCategoryController, getCategoryController } from '~/controllers/catagories.controllers'
+import {
+  createCategoryController,
+  getAllCategoryController,
+  getCategoryController
+} from '~/controllers/catagories.controllers'
 import { idMongoParamValidator } from '~/middlewares/brands.middlewares'
 import { createCategoryValidator } from '~/middlewares/categories.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
@@ -35,5 +39,12 @@ categoriesRouter.get(
   idMongoParamValidator,
   wrapAsync(getCategoryController)
 )
+
+/*
+    Description: get all category
+    path: /categories/
+    method: get
+*/
+categoriesRouter.get('/', wrapAsync(getAllCategoryController))
 
 export default categoriesRouter

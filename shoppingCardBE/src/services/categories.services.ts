@@ -26,6 +26,12 @@ class CategoriesServices {
         message: CATEGORY_MESSAGES.CATEGORY_NOT_FOUND
       })
     }
+    return category
+  }
+
+  async getAllCategories() {
+    const categories = await databaseServices.categories.find().toArray()
+    return categories
   }
 }
 
