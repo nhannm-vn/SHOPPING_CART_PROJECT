@@ -9,6 +9,7 @@ import { initFolder } from './utils/file'
 import staticRouter from './routes/static.routers'
 import dotenv from 'dotenv'
 import brandRouter from './routes/brands.routers'
+import categoriesRouter from './routes/categories.routers'
 dotenv.config()
 
 //_Tạo con PORT dành cho backend
@@ -42,6 +43,8 @@ app.use('/medias', mediaRouter)
 app.use('/static', staticRouter) //serving: chia sẻ
 
 app.use('/brands', brandRouter)
+
+app.use('/categories', categoriesRouter)
 
 //_hàm này sẽ chạy cuối cùng và sẽ giúp bắt tất cả các lỗi
 app.use(defaultErrorHanlder)
