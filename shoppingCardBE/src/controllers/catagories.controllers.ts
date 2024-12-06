@@ -3,7 +3,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { CATEGORY_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
-import { CreateCategoryReqBody } from '~/models/requests/categories.request'
+import { CreateCategoryReqBody, GetCategoryReqParams } from '~/models/requests/categories.request'
 import { TokenPayload } from '~/models/requests/users.request'
 import catagoriesServices from '~/services/categories.services'
 import userServices from '~/services/users.services'
@@ -26,6 +26,20 @@ export const createCategoryController = async (
   const category = await catagoriesServices.createCategory(req.body)
   res.status(HTTP_STATUS.CREATED).json({
     message: CATEGORY_MESSAGES.CREATE_CATEGORY_SUCCESS,
+    result: category
+  })
+}
+
+export const getCategoryController = async (
+  req: Request<GetCategoryReqParams, any, any>, //
+  res: Response,
+  next: NextFunction
+) => {
+  //_Lấy id và đi tìm kiếm
+  const { id } = req.params
+  const category = await catagoriesServices.getCategoryById(id)
+  res.status(HTTP_STATUS.OK).json({
+    message: CATEGORY_MESSAGES.GET_CATEGORY_SUCCESS,
     result: category
   })
 }
