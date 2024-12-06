@@ -1,4 +1,5 @@
 import express from 'express'
+import { createCategoryController } from '~/controllers/catagories.controllers'
 import { createCategoryValidator } from '~/middlewares/categories.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
