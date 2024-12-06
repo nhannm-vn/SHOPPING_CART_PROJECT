@@ -6,7 +6,7 @@ import databaseServices from './database.services'
 import { LoginReqBody, RegisterReqBody, UpdateMeReqBody } from '~/models/requests/users.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
-import { TokenType, UserVerifyStatus } from '~/constants/enums'
+import { TokenType, USER_ROLE, UserVerifyStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -81,6 +81,14 @@ class UserServices {
       token: refresh_token,
       privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
     })
+  }
+
+  async isAdmin(user_id: string) {
+    const user = await databaseServices.users.findOne({
+      _id: new ObjectId(user_id),
+      role: USER_ROLE.Admin
+    })
+    return Boolean(user)
   }
 
   //_Vì mình muốn là trước khi tạo account thì check coi có trùng email trên hệ thống chưa

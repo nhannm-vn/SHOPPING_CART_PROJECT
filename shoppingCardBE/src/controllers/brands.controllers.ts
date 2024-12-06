@@ -6,6 +6,7 @@ import { ErrorWithStatus } from '~/models/Errors'
 import { CreateBrandReqBody, GetBrandReqParams } from '~/models/requests/brands.request'
 import { TokenPayload } from '~/models/requests/users.request'
 import brandsServices from '~/services/brands.services'
+import userServices from '~/services/users.services'
 
 export const createBrandController = async (
   req: Request<ParamsDictionary, any, CreateBrandReqBody>, //
@@ -19,7 +20,8 @@ export const createBrandController = async (
   const { user_id } = req.decode_authorization as TokenPayload
 
   //_Lấy user_id để tìm trong database xem phải admin không
-  const isAdmin = await brandsServices.isAdmin(user_id)
+  const isAdmin = await userServices.isAdmin(user_id)
+  //
   if (!isAdmin) {
     throw new ErrorWithStatus({
       status: HTTP_STATUS.FORBIDDEN,
