@@ -1,5 +1,6 @@
 import express from 'express'
-import { createProductController } from '~/controllers/products.controllers'
+import { createProductController, getProductByIdController } from '~/controllers/products.controllers'
+import { idMongoParamValidator } from '~/middlewares/brands.middlewares'
 import { createProductValidator } from '~/middlewares/products.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
@@ -32,6 +33,18 @@ productsRouter.post(
   accessTokenValidator, //
   createProductValidator,
   wrapAsync(createProductController)
+)
+
+/*
+Description: get a product by id
+    path: /products/:id
+    method: GET
+*/
+
+productsRouter.get(
+  '/:id', //
+  idMongoParamValidator,
+  wrapAsync(getProductByIdController)
 )
 
 export default productsRouter

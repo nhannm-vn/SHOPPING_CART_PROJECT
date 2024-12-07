@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb'
 import { Media } from '../Other'
+import { ParamsDictionary } from 'express-serve-static-core'
 
 export interface CreateProductReqBody {
   name: string
@@ -15,4 +16,13 @@ export interface CreateProductReqBody {
   category_id: string //mã chủng loại
   ship_category_id: string //chủng loại để đặt đơn bên ghn
   medias: Media[] //medias là cái mảng lưu nhưng thằng có type là Media
+}
+
+export interface GetProductByIdReqParams extends ParamsDictionary {
+  id: string
+}
+
+export interface GetAllProductsReqQuery {
+  page: string
+  limit: string
 }

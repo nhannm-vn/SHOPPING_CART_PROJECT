@@ -3,6 +3,9 @@ import databaseServices from './database.services'
 import Product from '~/models/schemas/Product.schema'
 import { ObjectId } from 'mongodb'
 import ProductMedia from '~/models/schemas/ProductMedia.schema'
+import { ErrorWithStatus } from '~/models/Errors'
+import { PRODUCT_MESSAGES } from '~/constants/messages'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 class ProductsServices {
   async createProduct(productInfor: CreateProductReqBody) {
@@ -45,6 +48,80 @@ class ProductsServices {
     //_Thêm vào database
     await databaseServices.productMedias.insertMany(mediaProduct)
     return result
+  }
+
+  async getProductById(id: string) {
+    //_Bình thường thì chỉ cần truy cập đến collection và tìm thôi
+    //_Tuy nhiên mình chia collection nên không thể lấy full thông tin mà phải lockup(join)
+    //_Nên mình phải sử dụng các aggrerate mới lấy full thông tin được
+
+    //_Mình biết luôn kq sẽ dưới dạng mảng và mình lấy phàn tử đầu tiên
+    const products = await databaseServices.products
+      .aggregate([
+        {
+          $match:
+            /**
+             * query: The query in MQL.
+             */
+            {
+              _id: new ObjectId(id)
+            }
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'product_medias',
+              localField: '_id',
+              foreignField: 'product_id',
+              as: 'medias_infor'
+            }
+        },
+        {
+          $project: {
+            medias: {
+              $map: {
+                input: '$medias_infor',
+                as: 'media',
+                in: '$$media.media'
+              }
+            },
+            _id: 1,
+            name: 1,
+            quantity: 1,
+            price: 1,
+            description: 1,
+            rating_number: 1,
+            brand_id: 1,
+            origin: 1,
+            volume: 1,
+            weight: 1,
+            height: 1,
+            width: 1,
+            sold: 1,
+            status: 1,
+            category_id: 1,
+            ship_category_id: 1
+          }
+        }
+      ])
+      .toArray() //converse json về mảng
+    //_Nếu mảng rỗng thì nghĩa là không có
+    if (products.length === 0) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: PRODUCT_MESSAGES.PRODUCT_NOT_FOUND
+      })
+    }
+    //_Nếu có thì return thằng số 0
+    return products[0]
   }
 }
 

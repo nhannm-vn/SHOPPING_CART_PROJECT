@@ -3,7 +3,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { PRODUCT_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
-import { CreateProductReqBody } from '~/models/requests/products.request'
+import { CreateProductReqBody, GetProductByIdReqParams } from '~/models/requests/products.request'
 import { TokenPayload } from '~/models/requests/users.request'
 import productsServices from '~/services/products.services'
 import userServices from '~/services/users.services'
@@ -31,4 +31,19 @@ export const createProductController = async (
       result: product
     })
   }
+}
+
+export const getProductByIdController = async (
+  req: Request<GetProductByIdReqParams, any, any>, //
+  res: Response,
+  next: NextFunction
+) => {
+  //_Lay id ra
+  const { id } = req.params
+  //_Tim product do
+  const product = await productsServices.getProductById(id)
+  res.status(HTTP_STATUS.OK).json({
+    message: PRODUCT_MESSAGES.GET_PRODUCT_BY_ID_SUCCESS,
+    result: product
+  })
 }
