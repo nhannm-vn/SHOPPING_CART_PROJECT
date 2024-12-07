@@ -123,6 +123,74 @@ class ProductsServices {
     //_Nếu có thì return thằng số 0
     return products[0]
   }
+
+  async getAllProducts({
+    page, //
+    limit
+  }: {
+    page: number
+    limit: number
+  }) {
+    //_skip nghĩa là bỏ qua những trang nào
+    //_đầu tiên thì mình sẽ có một đống sản phẩm lấy được
+    //và sau đó mình skip tới chỗ mình lấy
+    //và từ chỗ đó lấy lên limit sản phẩm
+    const products = await databaseServices.products
+      .aggregate([
+        {
+          $skip: limit * (page - 1)
+        },
+        {
+          $limit: limit
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'product_medias',
+              localField: '_id',
+              foreignField: 'product_id',
+              as: 'medias_infor'
+            }
+        },
+        {
+          $project: {
+            medias: {
+              $map: {
+                input: '$medias_infor',
+                as: 'media',
+                in: '$$media.media'
+              }
+            },
+            _id: 1,
+            name: 1,
+            quantity: 1,
+            price: 1,
+            description: 1,
+            rating_number: 1,
+            brand_id: 1,
+            origin: 1,
+            volume: 1,
+            weight: 1,
+            height: 1,
+            width: 1,
+            sold: 1,
+            status: 1,
+            category_id: 1,
+            ship_category_id: 1
+          }
+        }
+      ])
+      .toArray()
+    return products
+  }
 }
 
 const productsServices = new ProductsServices()

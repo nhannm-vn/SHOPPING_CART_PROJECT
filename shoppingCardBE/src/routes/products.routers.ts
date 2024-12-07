@@ -1,5 +1,9 @@
 import express from 'express'
-import { createProductController, getProductByIdController } from '~/controllers/products.controllers'
+import {
+  createProductController,
+  getAllProductController,
+  getProductByIdController
+} from '~/controllers/products.controllers'
 import { idMongoParamValidator } from '~/middlewares/brands.middlewares'
 import { createProductValidator } from '~/middlewares/products.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
@@ -45,6 +49,19 @@ productsRouter.get(
   '/:id', //
   idMongoParamValidator,
   wrapAsync(getProductByIdController)
+)
+
+/*
+Description: get all products with pagination
+    path: /products/?page&limit
+    method: GET
+    
+*/
+//query string lưu ý cái ?page&limit không có biểu diễn trên router
+//nhưng mà mình biết người dùng phải truyền thêm cái đó thì mới phân trang được
+productsRouter.get(
+  '/', //
+  wrapAsync(getAllProductController)
 )
 
 export default productsRouter

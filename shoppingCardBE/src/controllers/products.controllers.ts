@@ -3,7 +3,11 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { PRODUCT_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
-import { CreateProductReqBody, GetProductByIdReqParams } from '~/models/requests/products.request'
+import {
+  CreateProductReqBody,
+  GetAllProductsReqQuery,
+  GetProductByIdReqParams
+} from '~/models/requests/products.request'
 import { TokenPayload } from '~/models/requests/users.request'
 import productsServices from '~/services/products.services'
 import userServices from '~/services/users.services'
@@ -45,5 +49,21 @@ export const getProductByIdController = async (
   res.status(HTTP_STATUS.OK).json({
     message: PRODUCT_MESSAGES.GET_PRODUCT_BY_ID_SUCCESS,
     result: product
+  })
+}
+
+export const getAllProductController = async (
+  req: Request<ParamsDictionary, any, any, GetAllProductsReqQuery>, //
+  res: Response,
+  next: NextFunction
+) => {
+  //_Lấy ra page và limit để tính
+  //_Lưu ý nó là string và phải đưa về số
+  const page = Number(req.query.page)
+  const limit = Number(req.query.limit)
+  const products = await productsServices.getAllProducts({ page, limit })
+  res.status(HTTP_STATUS.OK).json({
+    message: PRODUCT_MESSAGES.GET_ALL_PRODUCTS_SUCCESS,
+    result: products
   })
 }
