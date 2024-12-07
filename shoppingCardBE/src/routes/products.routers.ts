@@ -1,4 +1,5 @@
 import express from 'express'
+import { createProductValidator } from '~/middlewares/products.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handlers'
 
@@ -27,7 +28,7 @@ const productsRouter = express.Router()
 */
 productsRouter.post(
   '/',
-  accessTokenValidator //
+  accessTokenValidator, //
   createProductValidator,
   wrapAsync(createProductController)
 )
