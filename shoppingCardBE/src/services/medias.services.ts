@@ -2,6 +2,7 @@ import { Request } from 'express'
 import sharp from 'sharp'
 import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import fs from 'fs'
+import { exec } from 'child_process'
 import { getNameFromFullnameFile, handleUploadImage, handleUploadVideo } from '~/utils/file'
 import { Media } from '~/models/Other'
 import { MediaType } from '~/constants/enums'
@@ -28,8 +29,16 @@ class MediasServices {
         //_Sau khi tải lên thì gọi sharp để xư lí ảnh
         const infor = await sharp(file.filepath).jpeg().toFile(newPath)
 
-        //_Xóa các tấm hình trong thư mực tạm
-        fs.unlinkSync(file.filepath)
+        //_Xóa các tấm hình trong thư mục tạm
+        // fs.unlinkSync(file.filepath)
+        //*Xóa bằng quyền cao hơn cả rimraf và unlinkSync
+        exec(`del ${file.filepath}`, (err, stdout, stderr) => {
+          if (err) {
+            console.error('Không thể xóa tệp:', err)
+          } else {
+            console.log('Xóa tệp thành công với del!')
+          }
+        })
         //filepath: lưu đường dẫn lưu trong thư mực tạm sau khi lọc
 
         //_setup một link ảnh và gửi cho người ta
