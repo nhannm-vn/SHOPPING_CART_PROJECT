@@ -15,6 +15,7 @@ import { Collection, Db, MongoClient } from 'mongodb'
 import Brand from '~/models/schemas/Brand.schema'
 import Category from '~/models/schemas/Category.schema'
 import Product from '~/models/schemas/Product.schema'
+import ProductMedia from '~/models/schemas/ProductMedia.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@shoppingcardprojectclus.t8nte.mongodb.net/?retryWrites=true&w=majority&appName=shoppingCardProjectClusterAgain`
@@ -75,6 +76,11 @@ class DatabaseServices {
 
   get products(): Collection<Product> {
     return this.db.collection(process.env.DB_PRODUCTS_COLLECTION as string)
+  }
+
+  //_databse chuyên dùng để lưu hình ảnh của product dưới mối quan hệ 1product-nSanpham
+  get productMedias(): Collection<ProductMedia> {
+    return this.db.collection(process.env.DB_PRODUCT_MEDIA_COLLECTION as string)
   }
 
   //_Tạo index theo hướng firscode nghĩa là viết code ở đây để tạo trên db
